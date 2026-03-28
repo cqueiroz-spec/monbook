@@ -17,7 +17,6 @@
             touch-action: manipulation;
         }
 
-        /* Loader plus visible */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -50,7 +49,6 @@
             color: #ffffff; will-change: transform;
         }
 
-        /* --- Menu Principal & Animations --- */
         #circular-menu-wrapper {
             position: absolute; top: 32%; left: 50%; width: 160px; height: 160px;
             z-index: 100; pointer-events: none; display: flex; align-items: center;
@@ -64,29 +62,15 @@
         
         .spin-animation { animation: spinRing 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes spinRing { 0% { transform: rotateZ(-720deg); } 100% { transform: rotateZ(0deg); } }
-        
-        #circular-menu-wrapper.converging .btn-circular { transition: all 0.7s cubic-bezier(0.5, 0, 0.5, 1) !important; }
-        #circular-menu-wrapper.converging .btn-circular:not(.selected) {
-            top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotateX(-45deg) scale(0) !important;
-            opacity: 0 !important; pointer-events: none;
-        }
-        #circular-menu-wrapper.converging .btn-circular.selected {
-            top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotateX(-45deg) scale(1.6) !important;
-            opacity: 1 !important; animation: crystalShimmer 0.5s infinite alternate;
-            background: rgba(255, 255, 255, 0.6); box-shadow: 0 0 40px white, inset 0 0 10px white; z-index: 250;
-        }
-        #circular-menu-wrapper.mana-final .btn-circular.selected { transform: translate(-50%, -50%) rotateX(-45deg) scale(0) !important; opacity: 0 !important; transition: all 0.4s ease-in !important; }
-        
-        @keyframes crystalShimmer { 0% { filter: brightness(1) blur(0px); box-shadow: 0 0 10px white; } 100% { filter: brightness(1.8) blur(1px); box-shadow: 0 0 60px rgba(255,255,255,0.4); } }
 
         .btn-circular {
-            position: absolute; width: 32px; height: 32px; border-radius: 50%;
+            position: absolute; width: 34px; height: 34px; border-radius: 50%;
             background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(8px);
             border: 1.5px solid rgba(255, 255, 255, 0.6); display: flex;
             align-items: center; justify-content: center; color: white;
             pointer-events: auto; transform: translate(-50%, -50%) rotateX(-45deg);
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            transition: top 0.4s ease, left 0.4s ease, transform 0.3s ease, background 0.2s;
+            transition: all 0.3s ease;
             z-index: 5; cursor: pointer;
         }
         .btn-circular:active { background: rgba(255,255,255,0.5); transform: translate(-50%, -50%) rotateX(-45deg) scale(0.9); }
@@ -108,7 +92,6 @@
         }
         #bottom-panel.ui-visible { opacity: 1; transform: translateY(0); }
 
-        /* --- Zone Note & Fenêtre --- */
         #glass-note-modal {
             position: absolute; top: 15%; bottom: 35%; 
             left: 50%; width: 90%; max-width: 56vh;
@@ -128,36 +111,6 @@
         }
         #glass-note-modal.active .glass-note-content { opacity: 1; }
 
-        #glass-textarea {
-            width: 100%; height: 100%; background: transparent; border: none;
-            outline: none; color: white; font-size: 22px; font-weight: 800;
-            text-align: center; overflow-y: auto; padding: 75px 20px 45px 20px; 
-            text-shadow: 0 2px 10px rgba(0,0,0,0.7); display: block;
-        }
-        
-        #glass-textarea img { 
-            width: 96%; max-width: 100%; height: auto; border-radius: 12px; 
-            margin: 15px auto; display: block; transition: transform 0.2s ease;
-            cursor: pointer;
-        }
-        #glass-textarea img.selected-img {
-            outline: 3px solid rgba(255,255,255,0.9); box-shadow: 0 0 30px rgba(255,255,255,0.4);
-        }
-
-        #image-bubble {
-            position: absolute; min-width: 80px; max-width: 180px; padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px);
-            border-radius: 24px; color: #1a1a1a; font-weight: 800; font-size: 14px;
-            z-index: 4000; pointer-events: auto; opacity: 0;
-            transform: scale(0.6) translateY(20px);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            left: 50%; top: 50%; text-align: center; line-height: 1.2;
-            outline: none; border: 2px solid #fff;
-        }
-        #image-bubble.active { opacity: 1; transform: scale(1) translateY(0) translateX(-50%); }
-
-        /* Confirmation */
         #custom-confirm {
             position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 20000;
             display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px);
@@ -174,7 +127,7 @@
 
     <div id="loader-overlay" class="active">
         <div class="w-12 h-12 border-4 border-white/10 border-t-white rounded-full animate-spin mb-4"></div>
-        <p class="text-white/40 text-[10px] tracking-[4px] uppercase font-bold">Synchronisation</p>
+        <p id="loader-text" class="text-white/40 text-[10px] tracking-[4px] uppercase font-bold">Initialisation</p>
     </div>
 
     <div id="bg-fixed-layer"></div>
@@ -186,7 +139,6 @@
             <div class="glass-note-content" onclick="event.stopPropagation()">
                 <div id="image-bubble" contenteditable="true" onclick="event.stopPropagation()"></div>
 
-                <!-- Haut Gauche : Taille -->
                 <div class="absolute top-8 left-8 z-[3100] cursor-pointer" onclick="toggleSizeMenu(event)">
                     <div class="w-3 h-3 bg-white rounded-full shadow-[0_0_15px_white]"></div>
                 </div>
@@ -197,12 +149,11 @@
                     <div class="btn-circular !w-9 !h-9 text-[10px] font-black absolute" style="transform:translate(0, 45px)" onclick="handleSelectionAction(event, 'font')">Aa</div>
                 </div>
 
-                <!-- Haut Droit : Fermer -->
                 <div class="absolute top-8 right-8 z-[3100] cursor-pointer" onclick="closeGlassNote(event)">
                     <div class="w-3 h-3 bg-white/50 rounded-full border border-white"></div>
                 </div>
 
-                <div id="glass-textarea" contenteditable="true" placeholder="Commencez à écrire..."></div>
+                <div id="glass-textarea" contenteditable="true" placeholder="Note..."></div>
                 
                 <div class="absolute bottom-6 left-6 p-3 bg-white/10 rounded-full cursor-pointer hover:bg-white/20 transition-colors" onclick="event.stopPropagation(); document.getElementById('note-img-upload').click()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3a2 2 0 0 0-3 0l-4 4"/></svg>
@@ -241,11 +192,11 @@
         </div>
 
         <div class="scrolling-zone">
-            <span id="texte-coulissant">Initialisation...</span>
+            <span id="texte-coulissant">Book 4 prêt...</span>
         </div>
 
         <div id="bottom-panel" onclick="event.stopPropagation()">
-            <textarea id="input-note" rows="1" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white outline-none focus:bg-white/10 transition-colors" placeholder="Entrez votre message..."></textarea>
+            <textarea id="input-note" rows="1" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white outline-none focus:bg-white/10 transition-colors" placeholder="Message..."></textarea>
             <div class="w-full py-6">
                 <input type="range" id="vitesse-range" min="0" max="80" value="20" class="w-full h-1 bg-white/10 appearance-none rounded-full accent-white">
             </div>
@@ -260,7 +211,7 @@
 
     <div id="custom-confirm">
         <div class="bg-white/10 backdrop-blur-3xl p-8 rounded-[40px] border border-white/20 text-center max-w-xs w-full mx-4 shadow-2xl">
-            <p class="text-white font-black text-xl mb-8">TOUT EFFACER ?</p>
+            <p class="text-white font-black text-xl mb-8">EFFACER ?</p>
             <div class="flex gap-4">
                 <button onclick="confirmReset(true)" class="flex-1 py-4 bg-white text-black font-black rounded-2xl active:scale-95 transition-transform">OUI</button>
                 <button onclick="confirmReset(false)" class="flex-1 py-4 bg-white/10 text-white font-bold rounded-2xl active:scale-95 transition-transform">NON</button>
@@ -273,24 +224,9 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Fixer la hauteur immédiatement
-        const lockLayout = () => {
-            document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`);
-        };
-        lockLayout();
-        window.addEventListener('resize', lockLayout);
+        const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
+        lockLayout(); window.addEventListener('resize', lockLayout);
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: ""
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'book-cloud-shared-v4';
-        const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
-
-        let isFirstLoad = true;
         const loaderOverlay = document.getElementById('loader-overlay');
         const syncIndicator = document.getElementById('sync-indicator');
         const glassTextarea = document.getElementById('glass-textarea');
@@ -306,52 +242,58 @@
         const vitesseRange = document.getElementById('vitesse-range');
 
         let currentFontIdx = 0;
-        let noteFontIdx = 0;
         const fontsRaw = ["Inter", "Playfair Display", "JetBrains Mono", "Dancing Script", "Montserrat"];
+        let isCloudEnabled = false;
+        let publicDocRef = null;
+        let authObj = null;
 
-        // Sécurité : masquer le loader quoi qu'il arrive après 3s
+        // MASQUER LE LOADER (Sécurité)
         const hideLoader = () => {
-            if (!isFirstLoad) return;
-            isFirstLoad = false;
             loaderOverlay.style.opacity = '0';
-            setTimeout(() => {
-                loaderOverlay.classList.remove('active');
-                loaderOverlay.style.display = 'none';
-            }, 600);
+            setTimeout(() => { loaderOverlay.classList.remove('active'); loaderOverlay.style.display = 'none'; }, 600);
         };
-        setTimeout(hideLoader, 3000);
+        setTimeout(hideLoader, 2000); // Forcer après 2s
 
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else { await signInAnonymously(auth); }
-            } catch (error) {
+        // INITIALISATION FIREBASE SÉCURISÉE
+        try {
+            const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+            if (configStr) {
+                const firebaseConfig = JSON.parse(configStr);
+                const app = initializeApp(firebaseConfig);
+                authObj = getAuth(app);
+                const db = getFirestore(app);
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'book-cloud-shared-v4';
+                publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+                
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(authObj, __initial_auth_token);
+                    } else { await signInAnonymously(authObj); }
+                };
+                initAuth();
+                onAuthStateChanged(authObj, user => { if (user) startSync(); });
+                isCloudEnabled = true;
+            } else {
+                console.log("Mode GitHub détecté (Local)");
+                syncIndicator.textContent = "MODE LOCAL (GITHUB)";
                 hideLoader();
-                syncIndicator.textContent = "MODE LOCAL";
             }
-        };
+        } catch (e) {
+            console.error("Erreur Firebase:", e);
+            hideLoader();
+        }
 
-        initAuth();
-        onAuthStateChanged(auth, user => { if (user) startSync(); });
-
-        const startSync = async () => {
-            if (!publicDocRef) { hideLoader(); return; }
+        const startSync = () => {
             onSnapshot(publicDocRef, snap => {
                 if (snap.exists()) applyData(snap.data());
                 hideLoader();
                 syncIndicator.textContent = "CLOUD ACTIF";
                 syncIndicator.style.color = "#4ade80";
-            }, err => {
-                hideLoader();
-                syncIndicator.textContent = "ERREUR SYNC";
-            });
+            }, err => { hideLoader(); });
         };
 
         function applyData(data) {
-            if (document.activeElement !== glassTextarea && data.pencilNoteRich !== undefined) {
-                glassTextarea.innerHTML = data.pencilNoteRich;
-            }
+            if (document.activeElement !== glassTextarea && data.pencilNoteRich !== undefined) glassTextarea.innerHTML = data.pencilNoteRich;
             if (document.activeElement !== inputNote && data.text !== undefined) {
                 inputNote.value = data.text;
                 texteCoulissant.textContent = data.text || "Book...";
@@ -366,14 +308,12 @@
         }
 
         window.saveData = async (updates) => {
-            if (!publicDocRef || isFirstLoad || !auth.currentUser) return;
+            if (!isCloudEnabled || !publicDocRef || !authObj.currentUser) return;
             try { await setDoc(publicDocRef, updates, { merge: true }); } catch (e) {}
         };
 
         window.handleGlobalClick = (e) => {
-            if (imageBubble.classList.contains('active')) {
-                imageBubble.classList.remove('active');
-            }
+            if (imageBubble.classList.contains('active')) return imageBubble.classList.remove('active');
             if (sizeMenu.classList.contains('active')) {
                 sizeMenu.classList.remove('active');
                 sizeMenu.style.opacity = '0';
@@ -420,13 +360,13 @@
                 runManaSequence(btn);
             } else if (type === 'music_toggle') {
                 runManaSequence(btn, () => { if (audioPlayer.src) audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause(); });
-            } else if (type === 'book') { runManaSequence(btn); }
+            } else { runManaSequence(btn); }
         };
 
         window.confirmReset = (confirm) => {
             document.getElementById('custom-confirm').classList.remove('active');
             if (confirm) {
-                window.saveData({ pencilNoteRich: "", text: "", color: "#ffffff", fontIdx: 0, bg: "" });
+                if (isCloudEnabled) window.saveData({ pencilNoteRich: "", text: "", color: "#ffffff", fontIdx: 0, bg: "" });
                 location.reload();
             }
         };
@@ -456,25 +396,17 @@
             if(e) e.stopPropagation();
             glassTextarea.focus();
             if (activeImage) {
-                if (action === 'big') activeImage.style.width = "100%";
-                else if (action === 'normal') activeImage.style.width = "96%";
+                activeImage.style.width = (action === 'big') ? "100%" : "96%";
             } else {
-                const sel = window.getSelection();
-                if (sel.rangeCount > 0 && !sel.isCollapsed) {
-                    const range = sel.getRangeAt(0);
-                    document.execCommand('fontSize', false, "7");
-                    const fontsTags = Array.from(glassTextarea.getElementsByTagName("font")).filter(f => f.size === "7" || f.getAttribute('size') === "7");
-                    fontsTags.forEach(f => {
+                document.execCommand('fontSize', false, "7");
+                const fontsTags = Array.from(glassTextarea.getElementsByTagName("font"));
+                fontsTags.forEach(f => {
+                    if (f.size === "7") {
                         f.removeAttribute("size");
-                        if (action === 'big') f.style.fontSize = "62px";
-                        else if (action === 'normal') f.style.fontSize = "22px";
-                        else if (action === 'font') {
-                            noteFontIdx = (noteFontIdx + 1) % fontsRaw.length;
-                            f.style.fontFamily = fontsRaw[noteFontIdx];
-                        }
-                    });
-                    sel.removeAllRanges(); sel.addRange(range);
-                }
+                        f.style.fontSize = (action === 'big') ? "62px" : "22px";
+                        if (action === 'font') f.style.fontFamily = fontsRaw[(currentFontIdx + 1) % fontsRaw.length];
+                    }
+                });
             }
             triggerSave();
             sizeMenu.classList.remove('active');
@@ -485,8 +417,6 @@
             if (e) e.stopPropagation();
             sizeMenu.classList.remove('active');
             imageBubble.classList.remove('active');
-            const selImg = glassTextarea.querySelector('.selected-img');
-            if (selImg) selImg.classList.remove('selected-img');
             window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
             glassModal.classList.remove('active');
             setTimeout(() => { glassModal.style.display = 'none'; }, 400);
@@ -494,13 +424,9 @@
 
         let activeImage = null;
         glassTextarea.addEventListener('click', (e) => {
-            const prev = glassTextarea.querySelector('.selected-img');
-            if (prev) prev.classList.remove('selected-img');
-            
             if (e.target.tagName === 'IMG') {
                 e.stopPropagation();
                 activeImage = e.target;
-                activeImage.classList.add('selected-img');
                 const savedText = activeImage.getAttribute('data-bubble-text') || "";
                 imageBubble.innerText = savedText;
                 const imgRect = activeImage.getBoundingClientRect();
@@ -515,30 +441,7 @@
         });
 
         imageBubble.addEventListener('input', () => {
-            if (activeImage) {
-                activeImage.setAttribute('data-bubble-text', imageBubble.innerText);
-                triggerSave();
-            }
-        });
-
-        glassTextarea.addEventListener('keydown', (e) => {
-            if (activeImage && (e.key === 'Backspace' || e.key === 'Delete')) {
-                e.preventDefault();
-                imageBubble.classList.remove('active');
-                activeImage.remove();
-                activeImage = null;
-                triggerSave();
-            }
-        });
-
-        glassTextarea.addEventListener('paste', (e) => {
-            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-            for (const item of items) {
-                if (item.type.indexOf("image") !== -1) {
-                    e.preventDefault();
-                    processFile({ target: { files: [item.getAsFile()] } }, 'note_img');
-                }
-            }
+            if (activeImage) { activeImage.setAttribute('data-bubble-text', imageBubble.innerText); triggerSave(); }
         });
 
         window.processFile = (event, mode) => {
@@ -547,27 +450,21 @@
             const reader = new FileReader();
             reader.onload = e => {
                 if (mode === 'audio') {
-                    if (audioPlayer.src) URL.revokeObjectURL(audioPlayer.src);
                     audioPlayer.src = URL.createObjectURL(file); audioPlayer.play();
                 } else {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        const maxDim = (mode === 'bg' ? 1080 : 500);
-                        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-                        canvas.width = img.width * scale;
-                        canvas.height = img.height * scale;
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const dataUrl = canvas.toDataURL('image/jpeg', mode === 'bg' ? 0.4 : 0.6);
+                        const scale = Math.min(1, (mode === 'bg' ? 1080 : 500) / Math.max(img.width, img.height));
+                        canvas.width = img.width * scale; canvas.height = img.height * scale;
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
                         if (mode === 'bg') {
                             bgLayer.style.backgroundImage = `url('${dataUrl}')`;
                             window.saveData({ bg: dataUrl });
-                        } else if (mode === 'note_img') {
-                            const newImg = document.createElement('img');
-                            newImg.src = dataUrl;
-                            glassTextarea.appendChild(newImg);
-                            triggerSave();
+                        } else {
+                            const newImg = document.createElement('img'); newImg.src = dataUrl;
+                            glassTextarea.appendChild(newImg); triggerSave();
                         }
                     };
                     img.src = e.target.result;
@@ -587,7 +484,6 @@
             clearTimeout(window.t2);
             window.t2 = setTimeout(() => window.saveData({ text: e.target.value }), 600);
         });
-        vitesseRange.addEventListener('change', () => window.saveData({ vitesse: vitesseRange.value }));
 
         let positionX = window.innerWidth;
         function animate() {
