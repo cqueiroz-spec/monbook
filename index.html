@@ -1,73 +1,165 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Book 4</title>
     
-    <!-- Optimisations iOS pour une expérience App fluide -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Book 4">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;900&family=Playfair+Display:ital,wght@1,900&family=JetBrains+Mono:wght@800&family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,900;1,900&display=swap');
+
+        body, html {
+            margin: 0; padding: 0; height: 100vh; width: 100%; background-color: #000;
+            font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased; overflow: hidden; position: fixed;
+            touch-action: manipulation;
+        }
+
+        #bg-fixed-layer {
+            position: fixed; inset: 0; z-index: 1;
+            background-color: #000; background-size: cover; background-position: center;
+            background-repeat: no-repeat; transition: background-image 0.8s ease;
+            background-image: linear-gradient(180deg, #001219 0%, #002533 100%);
+        }
+
+        #loader-overlay {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease; pointer-events: none;
+        }
+
+        /* --- Animations & Scrolling --- */
+        .scrolling-zone {
+            position: absolute; top: 45%; left: 0; width: 100%; height: 60px; 
+            display: flex; align-items: center; overflow: hidden; z-index: 25; pointer-events: none;
+        }
+        #texte-coulissant {
+            white-space: nowrap; position: absolute; font-size: 2.2rem; font-weight: 900;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.6); color: #fff; will-change: transform;
+        }
+
+        /* --- Menu Circulaire --- */
+        #circular-menu-wrapper {
+            position: absolute; top: 32%; left: 50%; width: 140px; height: 140px;
+            z-index: 100; pointer-events: none; display: flex; align-items: center;
+            justify-content: center; transform: translate(-50%, -50%) rotateX(45deg) scale(0);
+            opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #circular-menu-wrapper.ui-visible { opacity: 1; transform: translate(-50%, -50%) rotateX(45deg) scale(1); pointer-events: auto; }
         
-        body, html { 
-            margin: 0; padding: 0; height: 100vh; background-color: #000; 
-            font-family: 'Inter', sans-serif; overflow: hidden; position: fixed; width: 100%; 
+        #menu-ring { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
+        .spin-animation { animation: spinRing 1s ease-out forwards; }
+        @keyframes spinRing { from { transform: rotateZ(-360deg); } to { transform: rotateZ(0); } }
+
+        .btn-circular {
+            position: absolute; width: 22px; height: 22px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5); display: flex;
+            align-items: center; justify-content: center; color: white;
+            transform: translate(-50%, -50%) rotateX(-45deg); cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s;
+        }
+        .btn-circular:nth-child(1) { top: 0%; left: 50%; }
+        .btn-circular:nth-child(2) { top: 14.6%; left: 85.4%; }
+        .btn-circular:nth-child(3) { top: 50%; left: 100%; }
+        .btn-circular:nth-child(4) { top: 85.4%; left: 85.4%; }
+        .btn-circular:nth-child(5) { top: 100%; left: 50%; }
+        .btn-circular:nth-child(6) { top: 85.4%; left: 14.6%; }
+        .btn-circular:nth-child(7) { top: 50%; left: 0%; }
+        .btn-circular:nth-child(8) { top: 14.6%; left: 14.6%; }
+
+        /* --- Modal Note Verre --- */
+        #glass-note-modal {
+            position: absolute; inset: 0; z-index: 3000;
+            display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.4);
+        }
+        #glass-note-modal.active { display: flex; }
+        .glass-note-content {
+            width: 90%; height: 60%; background: rgba(255, 255, 255, 0.15); 
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-radius: 40px; border: 1px solid rgba(255,255,255,0.2);
+            padding: 40px; position: relative;
+        }
+        #glass-textarea {
+            width: 100%; height: 100%; background: transparent; border: none; outline: none;
+            color: white; font-size: 20px; text-align: center;
         }
 
-        #bg { 
-            position: fixed; inset: 0; 
-            background: linear-gradient(180deg, #001219 0%, #002533 100%); 
-            z-index: 1; 
+        #bottom-panel {
+            position: absolute; bottom: 0; width: 100%; padding: 20px 25px calc(20px + env(safe-area-inset-bottom));
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            z-index: 50; transition: all 0.4s ease; transform: translateY(100%);
         }
+        #bottom-panel.ui-visible { transform: translateY(0); }
 
-        .scrolling-zone { 
-            position: absolute; top: 45%; width: 100%; height: 60px; 
-            display: flex; align-items: center; overflow: hidden; z-index: 10; 
+        #sync-status {
+            position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+            font-size: 9px; color: rgba(255,255,255,0.2); letter-spacing: 3px; z-index: 200;
         }
-
-        #texte-coulissant { 
-            white-space: nowrap; position: absolute; font-size: 2.2rem; 
-            font-weight: 900; color: #fff; will-change: transform; 
-            text-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-
-        #status { 
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
-            font-size: 10px; color: rgba(255,255,255,0.3); z-index: 100; 
-            text-transform: uppercase; letter-spacing: 2px; 
-        }
-
-        /* Petit rond de chargement discret */
-        #mini-loader {
-            position: fixed; top: 20px; right: 20px; width: 12px; height: 12px;
-            border: 2px solid rgba(255,255,255,0.1); border-top-color: #fff;
-            border-radius: 50%; animation: spin 1s linear infinite; z-index: 100;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
-    <div id="mini-loader"></div>
-    <div id="bg"></div>
-    
-    <div class="scrolling-zone">
-        <span id="texte-coulissant">Bienvenue sur Book 4...</span>
+<body onclick="handleGlobalClick(event)">
+
+    <div id="loader-overlay">
+        <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
 
-    <div id="status">INITIALISATION...</div>
+    <div id="bg-fixed-layer"></div>
+
+    <div id="portrait-container" class="relative w-full max-w-[420px] h-full mx-auto overflow-hidden">
+        
+        <!-- MODAL NOTE -->
+        <div id="glass-note-modal" onclick="closeGlassNote(event)">
+            <div class="glass-note-content" onclick="event.stopPropagation()">
+                <div id="glass-textarea" contenteditable="true" placeholder="Note secrète..."></div>
+            </div>
+        </div>
+
+        <!-- MENU -->
+        <div id="circular-menu-wrapper">
+            <div id="menu-ring">
+                <div class="btn-circular" onclick="handleAction(event, 'gallery')">🖼️</div>
+                <div class="btn-circular" onclick="handleAction(event, 'book')">📖</div>
+                <div class="btn-circular" style="overflow:hidden">
+                    <input type="color" class="absolute inset-0 opacity-0 scale-150" oninput="handleAction(event, 'color', this.value)">🎨
+                </div>
+                <div class="btn-circular" onclick="handleAction(event, 'font')">Aa</div>
+                <div class="btn-circular" onclick="handleAction(event, 'reset')">🔄</div>
+                <div class="btn-circular" onclick="handleAction(event, 'pencil')">✏️</div>
+                <div class="btn-circular" onclick="handleAction(event, 'files')">📁</div>
+                <div class="btn-circular" onclick="handleAction(event, 'music')">🎵</div>
+            </div>
+        </div>
+
+        <!-- TEXTE -->
+        <div class="scrolling-zone">
+            <span id="texte-coulissant">Book 4 Ready</span>
+        </div>
+
+        <!-- PANNEAU -->
+        <div id="bottom-panel" onclick="event.stopPropagation()">
+            <input type="text" id="input-note" class="w-full bg-white/10 border border-white/20 rounded-xl p-4 text-white outline-none" placeholder="Modifier le texte...">
+            <div class="mt-4 flex items-center gap-4">
+                <span class="text-[10px] text-white/50">VITESSE</span>
+                <input type="range" id="vitesse-range" min="0" max="10" value="2" class="flex-1 accent-white">
+            </div>
+        </div>
+
+        <div id="sync-status">OFFLINE</div>
+    </div>
+
+    <input type="file" id="bg-upload" class="hidden" accept="image/*" onchange="processFile(event)">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- CONFIGURATION FIREBASE ---
-        // Remplace les XXXXX par tes codes Firebase pour activer la synchro
         const firebaseConfig = {
             apiKey: "XXXXX",
             authDomain: "XXXXX.firebaseapp.com",
@@ -77,59 +169,99 @@
             appId: "XXXXX"
         };
 
-        const txt = document.getElementById('texte-coulissant');
-        const status = document.getElementById('status');
-        const loader = document.getElementById('mini-loader');
+        const els = {
+            txt: document.getElementById('texte-coulissant'),
+            bg: document.getElementById('bg-fixed-layer'),
+            input: document.getElementById('input-note'),
+            vit: document.getElementById('vitesse-range'),
+            loader: document.getElementById('loader-overlay'),
+            circ: document.getElementById('circular-menu-wrapper'),
+            menu: document.getElementById('menu-ring'),
+            modal: document.getElementById('glass-note-modal'),
+            area: document.getElementById('glass-textarea'),
+            bottom: document.getElementById('bottom-panel'),
+            status: document.getElementById('sync-status')
+        };
 
-        // 1. CHARGEMENT IMMÉDIAT (Anti-lenteur)
-        // On regarde si on a déjà des notes enregistrées sur l'iPad
-        const cache = localStorage.getItem('book_cache_v4');
-        if (cache) {
-            const data = JSON.parse(cache);
-            txt.textContent = data.text || "Book 4";
-            status.textContent = "MODE HORS-LIGNE";
-        }
+        const fonts = ["Inter", "Playfair Display", "JetBrains Mono", "Dancing Script", "Montserrat"];
+        let currentFont = 0;
 
-        // 2. TENTATIVE DE SYNCHRONISATION
-        try {
-            if (firebaseConfig.apiKey !== "XXXXX") {
+        const loadLocal = () => {
+            const cache = JSON.parse(localStorage.getItem('book_cache_v4') || '{}');
+            if(cache.text) els.txt.textContent = cache.text;
+            if(cache.bg) els.bg.style.backgroundImage = `url(${cache.bg})`;
+            if(cache.color) els.txt.style.color = cache.color;
+            if(cache.fontIdx !== undefined) els.txt.style.fontFamily = fonts[cache.fontIdx];
+            if(cache.note) els.area.innerHTML = cache.note;
+            setTimeout(() => { if(els.loader) els.loader.style.opacity = '0'; }, 1000);
+        };
+        loadLocal();
+
+        const startSync = async () => {
+            if(firebaseConfig.apiKey === "XXXXX") return;
+            try {
                 const app = initializeApp(firebaseConfig);
-                const auth = getAuth(app);
                 const db = getFirestore(app);
-                
-                signInAnonymously(auth).then(() => {
-                    status.textContent = "SYNCHRONISÉ";
-                    status.style.color = "#4ade80";
-                    loader.style.display = 'none';
-
-                    const docRef = doc(db, 'artifacts', 'book4', 'public', 'data', 'main');
-                    onSnapshot(docRef, (snap) => {
-                        if (snap.exists()) {
-                            const data = snap.data();
-                            txt.textContent = data.text;
-                            // On sauve dans la mémoire de l'iPad pour la prochaine fois
-                            localStorage.setItem('book_cache_v4', JSON.stringify(data));
-                        }
-                    });
+                const auth = getAuth(app);
+                await signInAnonymously(auth);
+                onSnapshot(doc(db, 'artifacts', 'book4', 'public', 'data', 'main'), (snap) => {
+                    if(snap.exists()){
+                        const data = snap.data();
+                        updateUI(data);
+                        localStorage.setItem('book_cache_v4', JSON.stringify(data));
+                    }
                 });
-            } else {
-                // Si pas de codes Firebase, on enlève le loader après 2 secondes
-                setTimeout(() => { 
-                    loader.style.display = 'none';
-                    status.textContent = "PRÊT (LOCAL)";
-                }, 2000);
-            }
-        } catch (e) {
-            loader.style.display = 'none';
-            status.textContent = "ERREUR SYNC";
+            } catch(e) {}
+        };
+        startSync();
+
+        function updateUI(data) {
+            if(data.text && document.activeElement !== els.input) { els.txt.textContent = data.text; els.input.value = data.text; }
+            if(data.bg) els.bg.style.backgroundImage = `url(${data.bg})`;
+            if(data.color) els.txt.style.color = data.color;
+            if(data.fontIdx !== undefined) els.txt.style.fontFamily = fonts[data.fontIdx];
+            if(data.note) els.area.innerHTML = data.note;
         }
 
-        // 3. ANIMATION FLUIDE
+        window.handleGlobalClick = () => {
+            if(els.modal.classList.contains('active')) return;
+            els.menu.classList.remove('spin-animation');
+            void els.menu.offsetWidth;
+            els.menu.classList.add('spin-animation');
+            els.circ.classList.toggle('ui-visible');
+            els.bottom.classList.toggle('ui-visible');
+        };
+
+        window.handleAction = (e, type, val) => {
+            e.stopPropagation();
+            if(type === 'pencil') { els.modal.classList.add('active'); els.area.focus(); }
+            else if(type === 'font') { currentFont = (currentFont + 1) % fonts.length; els.txt.style.fontFamily = fonts[currentFont]; save({ fontIdx: currentFont }); }
+            else if(type === 'color') { els.txt.style.color = val; save({ color: val }); }
+            else if(type === 'gallery') { document.getElementById('bg-upload').click(); }
+            else if(type === 'reset') { if(confirm("Effacer ?")) { localStorage.clear(); location.reload(); } }
+        };
+
+        window.closeGlassNote = (e) => { save({ note: els.area.innerHTML }); els.modal.classList.remove('active'); };
+        const save = (data) => {
+            const cache = JSON.parse(localStorage.getItem('book_cache_v4') || '{}');
+            localStorage.setItem('book_cache_v4', JSON.stringify({...cache, ...data}));
+        };
+
+        els.input.addEventListener('input', (e) => { els.txt.textContent = e.target.value || "Book 4"; save({ text: e.target.value }); });
+        window.processFile = (e) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => { els.bg.style.backgroundImage = `url(${ev.target.result})`; save({ bg: ev.target.result }); };
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
         let pos = window.innerWidth;
         function animate() {
-            pos -= 2; // Vitesse du texte
-            if (pos < -txt.offsetWidth) pos = window.innerWidth;
-            txt.style.transform = `translateX(${pos}px)`;
+            const v = parseFloat(els.vit.value);
+            if(v > 0) {
+                pos -= v;
+                if(pos < -els.txt.offsetWidth) pos = window.innerWidth;
+                els.txt.style.transform = `translateX(${pos}px)`;
+            }
             requestAnimationFrame(animate);
         }
         animate();
