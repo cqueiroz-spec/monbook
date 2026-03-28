@@ -4,27 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Book 4</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Book 4">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;900&family=Playfair+Display:ital,wght@1,900&family=JetBrains+Mono:wght@800&family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,900;1,900&display=swap');
 
+        :root { --fixed-vh: 100vh; }
+
         body, html {
-            margin: 0; padding: 0; height: 100vh; width: 100%; background-color: #000;
+            margin: 0; padding: 0; height: var(--fixed-vh); width: 100%; background-color: #000;
             font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
             -webkit-font-smoothing: antialiased; overflow: hidden; position: fixed;
             touch-action: manipulation;
-        }
-
-        #bg-fixed-layer {
-            position: fixed; inset: 0; z-index: 1;
-            background-color: #000; background-size: cover; background-position: center;
-            background-repeat: no-repeat; transition: background-image 0.8s ease;
-            background-image: linear-gradient(180deg, #001219 0%, #002533 100%);
         }
 
         #loader-overlay {
@@ -32,37 +22,69 @@
             display: flex; align-items: center; justify-content: center;
             transition: opacity 0.5s ease; pointer-events: none;
         }
+        #loader-overlay.active { pointer-events: auto; }
 
-        /* --- Animations & Scrolling --- */
-        .scrolling-zone {
-            position: absolute; top: 45%; left: 0; width: 100%; height: 60px; 
-            display: flex; align-items: center; overflow: hidden; z-index: 25; pointer-events: none;
+        #bg-fixed-layer {
+            position: fixed; top: 0; left: 0; width: 100vw; height: var(--fixed-vh); z-index: 1;
+            background-color: #000; background-size: contain; background-position: center center;
+            background-repeat: no-repeat; transition: background-image 0.8s ease-in-out;
+            background-image: linear-gradient(180deg, #001219 0%, #002533 100%);
         }
+
+        #portrait-container {
+            position: relative; width: 100%; max-width: 420px; height: var(--fixed-vh);
+            margin: 0 auto; z-index: 10; background: transparent; cursor: pointer; perspective: 1200px;
+        }
+
+        .scrolling-zone {
+            position: absolute; left: 0; width: 100%; height: 60px; display: flex;
+            align-items: center; overflow: hidden; z-index: 25; pointer-events: none;
+            top: 45%; transition: top 0.3s ease;
+        }
+
         #texte-coulissant {
             white-space: nowrap; position: absolute; font-size: 2.2rem; font-weight: 900;
-            text-shadow: 0 0 20px rgba(0, 0, 0, 0.6); color: #fff; will-change: transform;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.6); letter-spacing: -0.02em;
+            color: #ffffff; will-change: transform;
         }
 
-        /* --- Menu Circulaire --- */
+        /* --- Menu Principal & Animations Mana --- */
         #circular-menu-wrapper {
             position: absolute; top: 32%; left: 50%; width: 140px; height: 140px;
             z-index: 100; pointer-events: none; display: flex; align-items: center;
-            justify-content: center; transform: translate(-50%, -50%) rotateX(45deg) scale(0);
-            opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            justify-content: center; transform-style: preserve-3d;
+            transform: translate(-50%, -50%) rotateX(45deg) scale(0);
+            opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; visibility: hidden;
         }
-        #circular-menu-wrapper.ui-visible { opacity: 1; transform: translate(-50%, -50%) rotateX(45deg) scale(1); pointer-events: auto; }
-        
+        #circular-menu-wrapper.ui-visible { opacity: 1; transform: translate(-50%, -50%) rotateX(45deg) scale(1); visibility: visible; }
         #menu-ring { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
-        .spin-animation { animation: spinRing 1s ease-out forwards; }
-        @keyframes spinRing { from { transform: rotateZ(-360deg); } to { transform: rotateZ(0); } }
+        
+        .spin-animation { animation: spinRing 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes spinRing { 0% { transform: rotateZ(-720deg); } 100% { transform: rotateZ(0deg); } }
+        
+        #circular-menu-wrapper.converging .btn-circular { transition: all 0.7s cubic-bezier(0.5, 0, 0.5, 1) !important; }
+        #circular-menu-wrapper.converging .btn-circular:not(.selected) {
+            top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotateX(-45deg) scale(0) !important;
+            opacity: 0 !important; pointer-events: none;
+        }
+        #circular-menu-wrapper.converging .btn-circular.selected {
+            top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotateX(-45deg) scale(1.6) !important;
+            opacity: 1 !important; animation: crystalShimmer 0.5s infinite alternate;
+            background: rgba(255, 255, 255, 0.6); box-shadow: 0 0 40px white, inset 0 0 10px white; z-index: 250;
+        }
+        #circular-menu-wrapper.mana-final .btn-circular.selected { transform: translate(-50%, -50%) rotateX(-45deg) scale(0) !important; opacity: 0 !important; transition: all 0.4s ease-in !important; }
+        
+        @keyframes crystalShimmer { 0% { filter: brightness(1) blur(0px); box-shadow: 0 0 10px white; } 100% { filter: brightness(1.8) blur(1px); box-shadow: 0 0 60px rgba(255,255,255,0.4); } }
 
         .btn-circular {
             position: absolute; width: 22px; height: 22px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5); display: flex;
+            background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(255, 255, 255, 0.7); display: flex;
             align-items: center; justify-content: center; color: white;
-            transform: translate(-50%, -50%) rotateX(-45deg); cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s;
+            pointer-events: auto; transform: translate(-50%, -50%) rotateX(-45deg);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            transition: top 0.4s ease, left 0.4s ease, transform 0.4s ease, background 0.2s;
+            z-index: 5; cursor: pointer;
         }
         .btn-circular:nth-child(1) { top: 0%; left: 50%; }
         .btn-circular:nth-child(2) { top: 14.6%; left: 85.4%; }
@@ -73,194 +95,545 @@
         .btn-circular:nth-child(7) { top: 50%; left: 0%; }
         .btn-circular:nth-child(8) { top: 14.6%; left: 14.6%; }
 
-        /* --- Modal Note Verre --- */
+        #bottom-panel {
+            position: absolute; bottom: 0; width: 100%; padding: 20px 25px calc(20px + env(safe-area-inset-bottom)) 25px;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+            z-index: 50; transition: all 0.4s ease; opacity: 0;
+            transform: translateY(20px); pointer-events: auto;
+        }
+        #bottom-panel.ui-visible { opacity: 1; transform: translateY(0); }
+
+        /* --- Zone Note & Fenêtre --- */
         #glass-note-modal {
-            position: absolute; inset: 0; z-index: 3000;
-            display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.4);
+            position: absolute; top: 15%; bottom: 35%; 
+            left: 50%; 
+            width: 90%; 
+            max-width: 56vh;
+            transform: translateX(-50%);
+            z-index: 3000; display: none; align-items: center; justify-content: center;
+            pointer-events: none; border-radius: 32px; overflow: visible;
+            border: none !important; box-shadow: none !important;
         }
         #glass-note-modal.active { display: flex; }
+
         .glass-note-content {
-            width: 90%; height: 60%; background: rgba(255, 255, 255, 0.15); 
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border-radius: 40px; border: 1px solid rgba(255,255,255,0.2);
-            padding: 40px; position: relative;
+            width: 100%; height: 100%; position: relative; 
+            display: block; background: rgba(255, 255, 255, 0.38); 
+            backdrop-filter: saturate(150%); -webkit-backdrop-filter: saturate(150%);
+            border-radius: 32px; overflow: visible; pointer-events: auto;
+            opacity: 0; transition: opacity 0.5s ease;
+            border: none !important; box-shadow: none !important; outline: none !important;
         }
+        #glass-note-modal.active .glass-note-content { opacity: 1; }
+
         #glass-textarea {
-            width: 100%; height: 100%; background: transparent; border: none; outline: none;
-            color: white; font-size: 20px; text-align: center;
+            width: 100%; height: 100%; background: transparent; border: none;
+            outline: none; color: white; font-size: 22px; font-weight: 800;
+            text-align: center; overflow-y: auto; padding: 75px 15px 45px 15px; 
+            text-shadow: 0 2px 10px rgba(0,0,0,0.7); display: block;
+        }
+        
+        #glass-textarea img { 
+            width: 96%; max-width: 100%; height: auto; border-radius: 12px; 
+            margin: 15px auto; display: block; transition: width 0.2s ease;
+            cursor: pointer;
+        }
+        #glass-textarea img.selected-img {
+            outline: 3px solid rgba(255,255,255,0.9); box-shadow: 0 0 25px rgba(255,255,255,0.6);
         }
 
-        #bottom-panel {
-            position: absolute; bottom: 0; width: 100%; padding: 20px 25px calc(20px + env(safe-area-inset-bottom));
-            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-            z-index: 50; transition: all 0.4s ease; transform: translateY(100%);
+        #image-bubble {
+            position: absolute; min-width: 80px; max-width: 180px; padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(10px);
+            border-radius: 24px; color: #1a1a1a; font-weight: 800; font-size: 14px;
+            z-index: 4000; pointer-events: auto; opacity: 0;
+            transform: scale(0.6) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            left: 50%; top: 50%; text-align: center; line-height: 1.2;
+            outline: none; border: 2px solid #fff;
         }
-        #bottom-panel.ui-visible { transform: translateY(0); }
+        #image-bubble.active { opacity: 1; transform: scale(1) translateY(0) translateX(-50%); }
+        #image-bubble::after {
+            content: ''; position: absolute; bottom: -10px; left: 50%; 
+            transform: translateX(-50%); border-left: 10px solid transparent;
+            border-right: 10px solid transparent; border-top: 12px solid rgba(255, 255, 255, 0.92);
+        }
+        #image-bubble:empty::before { content: 'Écrire...'; opacity: 0.4; }
 
-        #sync-status {
-            position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-            font-size: 9px; color: rgba(255,255,255,0.2); letter-spacing: 3px; z-index: 200;
+        .glass-note-size-toggle {
+            position: absolute; top: 30px; left: 30px; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 3100; pointer-events: auto;
+            transform: translate(-50%, -50%);
+        }
+        .size-dot { width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 15px white; }
+        
+        .size-menu-ring {
+            position: absolute; top: 30px; left: 30px; width: 0; height: 0;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none; z-index: 3090; transform: translate(-50%, -50%);
+            overflow: visible;
+        }
+        
+        .btn-size-action {
+            position: absolute; width: 34px; height: 34px; border-radius: 50%;
+            background: rgba(255,255,255,0.35); backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center;
+            color: white; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            font-size: 14px; top: 50%; left: 50%; margin-top: -17px; margin-left: -17px;
+            user-select: none; -webkit-user-select: none;
+        }
+        .size-menu-ring.active .btn-size-action { opacity: 1; pointer-events: auto; }
+        
+        .size-menu-ring.active .btn-1 { transform: rotate(0deg) translate(40px) rotate(0deg); }
+        .size-menu-ring.active .btn-2 { transform: rotate(72deg) translate(40px) rotate(-72deg); }
+        .size-menu-ring.active .btn-3 { transform: rotate(144deg) translate(40px) rotate(-144deg); }
+        .size-menu-ring.active .btn-4 { transform: rotate(216deg) translate(40px) rotate(-216deg); }
+        .size-menu-ring.active .btn-5 { transform: rotate(288deg) translate(40px) rotate(-288deg); }
+
+        .btn-size-action:active { background: white; color: black; transform: scale(0.85) !important; }
+
+        .glass-note-done-wrapper {
+            position: absolute; top: 30px; right: 30px; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 3100; pointer-events: auto;
+            transform: translate(50%, -50%);
+        }
+        .glass-note-done-dot { width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 10px white; }
+
+        .btn-add-img-note {
+            width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, 0.2);
+            display: flex; align-items: center; justify-content: center; cursor: pointer; color: white;
+            position: absolute; bottom: 15px; left: 15px; z-index: 10;
+        }
+
+        #sync-indicator {
+            position: absolute; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+            font-size: 8px; text-transform: uppercase; letter-spacing: 4px; color: rgba(255, 255, 255, 0.4); pointer-events: none;
+        }
+        .hidden-input { position: fixed; top: -100px; left: -100px; width: 1px; height: 1px; opacity: 0; }
+        
+        .glass-input {
+            width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px; padding: 10px; color: white; outline: none; resize: none;
         }
     </style>
 </head>
 <body onclick="handleGlobalClick(event)">
 
-    <div id="loader-overlay">
+    <div id="loader-overlay" class="active">
         <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
 
     <div id="bg-fixed-layer"></div>
 
-    <div id="portrait-container" class="relative w-full max-w-[420px] h-full mx-auto overflow-hidden">
-        
-        <!-- MODAL NOTE -->
-        <div id="glass-note-modal" onclick="closeGlassNote(event)">
+    <div id="portrait-container">
+        <audio id="audio-player" loop></audio>
+
+        <div id="glass-note-modal">
             <div class="glass-note-content" onclick="event.stopPropagation()">
-                <div id="glass-textarea" contenteditable="true" placeholder="Note secrète..."></div>
+                <div id="image-bubble" contenteditable="true" onclick="event.stopPropagation()"></div>
+
+                <div class="glass-note-size-toggle" onpointerdown="event.preventDefault(); toggleSizeMenu(event);">
+                    <div id="size-toggle-dot" class="size-dot"></div>
+                </div>
+                
+                <div id="size-menu" class="size-menu-ring">
+                    <div class="btn-size-action btn-1" onpointerdown="event.preventDefault(); handleSelectionAction('big');">A</div>
+                    <div class="btn-size-action btn-2" onpointerdown="event.preventDefault();"></div>
+                    <div class="btn-size-action btn-3" onpointerdown="event.preventDefault(); handleSelectionAction('font');">
+                        <span style="font-size: 11px;">Aa</span>
+                    </div>
+                    <div class="btn-size-action btn-4" onpointerdown="event.preventDefault();"></div>
+                    <div class="btn-size-action btn-5" onpointerdown="event.preventDefault(); handleSelectionAction('normal');">a</div>
+                </div>
+
+                <div class="glass-note-done-wrapper" onpointerdown="event.preventDefault();" onclick="closeGlassNote(event)">
+                    <div id="save-dot" class="glass-note-done-dot"></div>
+                </div>
+
+                <div id="glass-textarea" contenteditable="true" placeholder="Note..."></div>
+                
+                <div class="btn-add-img-note" onpointerdown="event.preventDefault();" onclick="document.getElementById('note-img-upload').click()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3a2 2 0 0 0-3 0l-4 4"/></svg>
+                </div>
             </div>
         </div>
 
-        <!-- MENU -->
         <div id="circular-menu-wrapper">
             <div id="menu-ring">
-                <div class="btn-circular" onclick="handleAction(event, 'gallery')">🖼️</div>
-                <div class="btn-circular" onclick="handleAction(event, 'book')">📖</div>
-                <div class="btn-circular" style="overflow:hidden">
-                    <input type="color" class="absolute inset-0 opacity-0 scale-150" oninput="handleAction(event, 'color', this.value)">🎨
+                <div class="btn-circular" title="Galerie" onclick="handleAction(event, 'gallery')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3a2 2 0 0 0-3 0l-4 4"/></svg>
                 </div>
-                <div class="btn-circular" onclick="handleAction(event, 'font')">Aa</div>
-                <div class="btn-circular" onclick="handleAction(event, 'reset')">🔄</div>
-                <div class="btn-circular" onclick="handleAction(event, 'pencil')">✏️</div>
-                <div class="btn-circular" onclick="handleAction(event, 'files')">📁</div>
-                <div class="btn-circular" onclick="handleAction(event, 'music')">🎵</div>
+                <div class="btn-circular" title="Livre" onclick="handleAction(event, 'book')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                <div class="btn-circular" title="Couleur">
+                    <div id="color-preview" style="width:12px; height:12px; border-radius:50%; background:white; border:1px solid white;"></div>
+                    <input type="color" id="color-picker" value="#ffffff" class="absolute inset-0 opacity-0 cursor-pointer" onclick="event.stopPropagation();" oninput="handleAction(event, 'color_live')" onchange="handleAction(event, 'color_final')">
+                </div>
+                <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
+                    <span style="font-size: 10px; font-weight: 900;">Aa</span>
+                </div>
+                <div class="btn-circular" title="Reset" onclick="handleAction(event, 'reset')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                </div>
+                <div class="btn-circular" title="Crayon" onclick="handleAction(event, 'pencil')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </div>
+                <div class="btn-circular" title="Fichiers" onclick="handleAction(event, 'files')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>
+                </div>
+                <div id="btn-music-play" class="btn-circular" title="Musique" onclick="handleAction(event, 'music_toggle')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                </div>
             </div>
         </div>
 
-        <!-- TEXTE -->
         <div class="scrolling-zone">
-            <span id="texte-coulissant">Book 4 Ready</span>
+            <span id="texte-coulissant">Book...</span>
         </div>
 
-        <!-- PANNEAU -->
         <div id="bottom-panel" onclick="event.stopPropagation()">
-            <input type="text" id="input-note" class="w-full bg-white/10 border border-white/20 rounded-xl p-4 text-white outline-none" placeholder="Modifier le texte...">
-            <div class="mt-4 flex items-center gap-4">
-                <span class="text-[10px] text-white/50">VITESSE</span>
-                <input type="range" id="vitesse-range" min="0" max="10" value="2" class="flex-1 accent-white">
+            <textarea id="input-note" rows="1" class="glass-input" placeholder="Message défilant..."></textarea>
+            <div class="w-full py-4 opacity-50">
+                <input type="range" id="vitesse-range" min="0" max="80" value="20" class="w-full h-px bg-white/30 appearance-none outline-none">
             </div>
         </div>
 
-        <div id="sync-status">OFFLINE</div>
-    </div>
+        <div id="sync-indicator">CONNECTÉ</div>
 
-    <input type="file" id="bg-upload" class="hidden" accept="image/*" onchange="processFile(event)">
+        <input type="file" id="bg-upload" class="hidden-input" accept="image/*" onchange="processFile(event, 'bg')">
+        <input type="file" id="music-upload" class="hidden-input" accept="audio/*" onchange="processFile(event, 'audio')">
+        <input type="file" id="note-img-upload" class="hidden-input" accept="image/*" onchange="processFile(event, 'note_img')">
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "XXXXX",
-            authDomain: "XXXXX.firebaseapp.com",
-            projectId: "XXXXX",
-            storageBucket: "XXXXX.appspot.com",
-            messagingSenderId: "XXXXX",
-            appId: "XXXXX"
+        const lockLayout = () => {
+            const h = window.innerHeight;
+            document.documentElement.style.setProperty('--fixed-vh', `${h}px`);
+        };
+        window.addEventListener('load', lockLayout);
+
+        // Configuration dynamique via l'environnement
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: ""
         };
 
-        const els = {
-            txt: document.getElementById('texte-coulissant'),
-            bg: document.getElementById('bg-fixed-layer'),
-            input: document.getElementById('input-note'),
-            vit: document.getElementById('vitesse-range'),
-            loader: document.getElementById('loader-overlay'),
-            circ: document.getElementById('circular-menu-wrapper'),
-            menu: document.getElementById('menu-ring'),
-            modal: document.getElementById('glass-note-modal'),
-            area: document.getElementById('glass-textarea'),
-            bottom: document.getElementById('bottom-panel'),
-            status: document.getElementById('sync-status')
-        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'book-cloud-shared-v4';
+        const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
 
-        const fonts = ["Inter", "Playfair Display", "JetBrains Mono", "Dancing Script", "Montserrat"];
-        let currentFont = 0;
+        let isFirstLoad = true;
+        const syncIndicator = document.getElementById('sync-indicator');
+        const loaderOverlay = document.getElementById('loader-overlay');
+        const glassTextarea = document.getElementById('glass-textarea');
+        const glassModal = document.getElementById('glass-note-modal');
+        const circWrapper = document.getElementById('circular-menu-wrapper');
+        const menuRing = document.getElementById('menu-ring');
+        const audioPlayer = document.getElementById('audio-player');
+        const sizeMenu = document.getElementById('size-menu');
+        const imageBubble = document.getElementById('image-bubble');
+        const bgLayer = document.getElementById('bg-fixed-layer');
+        const texteCoulissant = document.getElementById('texte-coulissant');
+        const inputNote = document.getElementById('input-note');
+        const vitesseRange = document.getElementById('vitesse-range');
 
-        const loadLocal = () => {
-            const cache = JSON.parse(localStorage.getItem('book_cache_v4') || '{}');
-            if(cache.text) els.txt.textContent = cache.text;
-            if(cache.bg) els.bg.style.backgroundImage = `url(${cache.bg})`;
-            if(cache.color) els.txt.style.color = cache.color;
-            if(cache.fontIdx !== undefined) els.txt.style.fontFamily = fonts[cache.fontIdx];
-            if(cache.note) els.area.innerHTML = cache.note;
-            setTimeout(() => { if(els.loader) els.loader.style.opacity = '0'; }, 1000);
-        };
-        loadLocal();
+        let currentFontIdx = 0;
+        let noteFontIdx = 0;
+        const fontsRaw = ["Inter", "Playfair Display", "JetBrains Mono", "Dancing Script", "Montserrat"];
 
-        const startSync = async () => {
-            if(firebaseConfig.apiKey === "XXXXX") return;
-            try {
-                const app = initializeApp(firebaseConfig);
-                const db = getFirestore(app);
-                const auth = getAuth(app);
-                await signInAnonymously(auth);
-                onSnapshot(doc(db, 'artifacts', 'book4', 'public', 'data', 'main'), (snap) => {
-                    if(snap.exists()){
-                        const data = snap.data();
-                        updateUI(data);
-                        localStorage.setItem('book_cache_v4', JSON.stringify(data));
-                    }
-                });
-            } catch(e) {}
-        };
-        startSync();
-
-        function updateUI(data) {
-            if(data.text && document.activeElement !== els.input) { els.txt.textContent = data.text; els.input.value = data.text; }
-            if(data.bg) els.bg.style.backgroundImage = `url(${data.bg})`;
-            if(data.color) els.txt.style.color = data.color;
-            if(data.fontIdx !== undefined) els.txt.style.fontFamily = fonts[data.fontIdx];
-            if(data.note) els.area.innerHTML = data.note;
+        function hideLoader() {
+            isFirstLoad = false;
+            loaderOverlay.style.opacity = '0';
+            loaderOverlay.classList.remove('active');
+            setTimeout(() => loaderOverlay.remove(), 500);
         }
 
-        window.handleGlobalClick = () => {
-            if(els.modal.classList.contains('active')) return;
-            els.menu.classList.remove('spin-animation');
-            void els.menu.offsetWidth;
-            els.menu.classList.add('spin-animation');
-            els.circ.classList.toggle('ui-visible');
-            els.bottom.classList.toggle('ui-visible');
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else { await signInAnonymously(auth); }
+            } catch (error) {
+                syncIndicator.textContent = "ÉCHEC CONNEXION";
+                syncIndicator.style.color = "#f87171";
+            }
         };
 
-        window.handleAction = (e, type, val) => {
+        initAuth();
+        onAuthStateChanged(auth, user => { if (user) startSync(); });
+
+        const startSync = async () => {
+            if (!publicDocRef) return;
+            onSnapshot(publicDocRef, snap => {
+                if (snap.exists()) applyData(snap.data());
+                if (isFirstLoad) hideLoader();
+                syncIndicator.textContent = "GRAVÉ DANS LE CLOUD";
+                syncIndicator.style.color = "#4ade80";
+            }, err => {
+                syncIndicator.textContent = "ERREUR SYNC";
+                syncIndicator.style.color = "#f87171";
+            });
+        };
+
+        function applyData(data) {
+            if (document.activeElement !== glassTextarea && data.pencilNoteRich !== undefined) {
+                glassTextarea.innerHTML = data.pencilNoteRich;
+            }
+            if (document.activeElement !== inputNote && data.text !== undefined) {
+                inputNote.value = data.text;
+                texteCoulissant.textContent = data.text || "Book...";
+            }
+            if (data.color) texteCoulissant.style.color = data.color;
+            if (data.fontIdx !== undefined) {
+                currentFontIdx = data.fontIdx;
+                texteCoulissant.style.fontFamily = `'${fontsRaw[currentFontIdx]}', sans-serif`;
+            }
+            if (data.bg) bgLayer.style.backgroundImage = `url('${data.bg}')`;
+            if (data.vitesse !== undefined) vitesseRange.value = data.vitesse;
+        }
+
+        window.saveData = async (updates) => {
+            if (!publicDocRef || isFirstLoad || !auth.currentUser) return;
+            try { await setDoc(publicDocRef, updates, { merge: true }); } catch (e) {}
+        };
+
+        const runManaSequence = (btn, callback) => {
+            circWrapper.classList.add('converging');
+            btn.classList.add('selected');
+            document.getElementById('bottom-panel').classList.remove('ui-visible');
+            setTimeout(() => { if (callback) callback(); }, 700);
+            setTimeout(() => {
+                circWrapper.classList.add('mana-final');
+                setTimeout(() => {
+                    circWrapper.classList.remove('ui-visible', 'converging', 'mana-final');
+                    btn.classList.remove('selected');
+                }, 400);
+            }, 1000);
+        };
+
+        window.handleGlobalClick = (e) => {
+            if (imageBubble.classList.contains('active')) {
+                imageBubble.classList.remove('active');
+            }
+            if (circWrapper.classList.contains('ui-visible')) {
+                circWrapper.classList.remove('ui-visible');
+                document.getElementById('bottom-panel').classList.remove('ui-visible');
+            } else if (!glassModal.classList.contains('active')) {
+                menuRing.classList.remove('spin-animation');
+                void menuRing.offsetWidth;
+                menuRing.classList.add('spin-animation');
+                circWrapper.classList.add('ui-visible');
+                document.getElementById('bottom-panel').classList.add('ui-visible');
+            }
+        };
+
+        window.handleAction = (event, type) => {
+            event.stopPropagation();
+            const btn = event.target.closest('.btn-circular');
+            if (!btn && type !== 'color_live') return;
+
+            if (type === 'pencil') {
+                runManaSequence(btn, () => {
+                    glassModal.style.display = 'flex';
+                    setTimeout(() => { glassModal.classList.add('active'); glassTextarea.focus(); }, 50);
+                });
+            } else if (type === 'gallery') {
+                runManaSequence(btn, () => document.getElementById('bg-upload').click());
+            } else if (type === 'files') {
+                runManaSequence(btn, () => document.getElementById('music-upload').click());
+            } else if (type === 'font') {
+                runManaSequence(btn, () => {
+                    currentFontIdx = (currentFontIdx + 1) % fontsRaw.length;
+                    texteCoulissant.style.fontFamily = `'${fontsRaw[currentFontIdx]}', sans-serif`;
+                    window.saveData({ fontIdx: currentFontIdx });
+                });
+            } else if (type === 'reset') {
+                runManaSequence(btn, () => {
+                    const res = document.createElement('div');
+                    res.innerHTML = '<div style="background:rgba(0,0,0,0.9); color:white; padding:20px; border-radius:15px; text-align:center;">Effacer tout ?<br><br><button id="conf-res" style="margin-right:10px; border:1px solid white; padding:5px 15px; border-radius:5px;">OUI</button><button id="canc-res" style="padding:5px 15px;">NON</button></div>';
+                    res.style.position = 'fixed'; res.style.inset = '0'; res.style.display = 'flex'; res.style.alignItems='center'; res.style.justifyContent='center'; res.style.zIndex = '10000';
+                    document.body.appendChild(res);
+                    res.querySelector('#conf-res').onclick = () => {
+                         window.saveData({ pencilNoteRich: "", text: "", color: "#ffffff", fontIdx: 0, bg: "" });
+                         location.reload();
+                    };
+                    res.querySelector('#canc-res').onclick = () => res.remove();
+                });
+            } else if (type === 'color_live') {
+                texteCoulissant.style.color = event.target.value;
+            } else if (type === 'color_final') {
+                window.saveData({ color: event.target.value });
+                runManaSequence(btn);
+            } else if (type === 'music_toggle') {
+                runManaSequence(btn, () => { if (audioPlayer.src) audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause(); });
+            } else if (type === 'book') { runManaSequence(btn); }
+        };
+
+        window.toggleSizeMenu = (e) => {
             e.stopPropagation();
-            if(type === 'pencil') { els.modal.classList.add('active'); els.area.focus(); }
-            else if(type === 'font') { currentFont = (currentFont + 1) % fonts.length; els.txt.style.fontFamily = fonts[currentFont]; save({ fontIdx: currentFont }); }
-            else if(type === 'color') { els.txt.style.color = val; save({ color: val }); }
-            else if(type === 'gallery') { document.getElementById('bg-upload').click(); }
-            else if(type === 'reset') { if(confirm("Effacer ?")) { localStorage.clear(); location.reload(); } }
+            sizeMenu.classList.toggle('active');
+            document.getElementById('size-toggle-dot').style.transform = sizeMenu.classList.contains('active') ? 'scale(1.4)' : 'scale(1)';
         };
 
-        window.closeGlassNote = (e) => { save({ note: els.area.innerHTML }); els.modal.classList.remove('active'); };
-        const save = (data) => {
-            const cache = JSON.parse(localStorage.getItem('book_cache_v4') || '{}');
-            localStorage.setItem('book_cache_v4', JSON.stringify({...cache, ...data}));
+        window.handleSelectionAction = (action) => {
+            const DEFAULT_PX = 22;
+            const BIG_PX = 62;
+            glassTextarea.focus();
+            if (activeImage) {
+                if (action === 'big') activeImage.style.width = "100%";
+                else if (action === 'normal') activeImage.style.width = "96%";
+            } else {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && !sel.isCollapsed) {
+                    const range = sel.getRangeAt(0);
+                    document.execCommand('fontSize', false, "7");
+                    const fontsTags = Array.from(glassTextarea.getElementsByTagName("font")).filter(f => f.size === "7" || f.getAttribute('size') === "7");
+                    fontsTags.forEach(f => {
+                        f.removeAttribute("size");
+                        if (action === 'big') f.style.fontSize = BIG_PX + "px";
+                        else if (action === 'normal') f.style.fontSize = DEFAULT_PX + "px";
+                        else if (action === 'font') {
+                            noteFontIdx = (noteFontIdx + 1) % fontsRaw.length;
+                            f.style.fontFamily = fontsRaw[noteFontIdx];
+                        }
+                    });
+                    sel.removeAllRanges(); sel.addRange(range);
+                }
+            }
+            triggerSave();
         };
 
-        els.input.addEventListener('input', (e) => { els.txt.textContent = e.target.value || "Book 4"; save({ text: e.target.value }); });
-        window.processFile = (e) => {
+        window.closeGlassNote = (e) => {
+            if (e) e.stopPropagation();
+            sizeMenu.classList.remove('active');
+            imageBubble.classList.remove('active');
+            const selImg = glassTextarea.querySelector('.selected-img');
+            if (selImg) selImg.classList.remove('selected-img');
+            window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
+            glassModal.classList.remove('active');
+            setTimeout(() => { glassModal.style.display = 'none'; }, 300);
+        };
+
+        let activeImage = null;
+        glassTextarea.addEventListener('click', (e) => {
+            const prev = glassTextarea.querySelector('.selected-img');
+            if (prev) prev.classList.remove('selected-img');
+            
+            if (e.target.tagName === 'IMG') {
+                e.stopPropagation();
+                activeImage = e.target;
+                activeImage.classList.add('selected-img');
+                
+                const savedText = activeImage.getAttribute('data-bubble-text') || "";
+                imageBubble.innerText = savedText;
+
+                const imgRect = activeImage.getBoundingClientRect();
+                const containerRect = glassModal.getBoundingClientRect();
+                imageBubble.style.top = (imgRect.top - containerRect.top - 60) + "px";
+                imageBubble.style.left = (imgRect.left - containerRect.left + (imgRect.width / 2)) + "px";
+                imageBubble.classList.add('active');
+            } else {
+                activeImage = null;
+                imageBubble.classList.remove('active');
+            }
+        });
+
+        imageBubble.addEventListener('input', () => {
+            if (activeImage) {
+                activeImage.setAttribute('data-bubble-text', imageBubble.innerText);
+                triggerSave();
+            }
+        });
+
+        glassTextarea.addEventListener('keydown', (e) => {
+            if (activeImage && (e.key === 'Backspace' || e.key === 'Delete')) {
+                e.preventDefault();
+                imageBubble.classList.remove('active');
+                activeImage.remove();
+                activeImage = null;
+                triggerSave();
+            }
+        });
+
+        glassTextarea.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (const item of items) {
+                if (item.type.indexOf("image") !== -1) {
+                    e.preventDefault();
+                    const blob = item.getAsFile();
+                    processFile({ target: { files: [blob] } }, 'note_img');
+                }
+            }
+        });
+
+        window.processFile = (event, mode) => {
+            const file = event.target.files[0];
+            if (!file) return;
             const reader = new FileReader();
-            reader.onload = (ev) => { els.bg.style.backgroundImage = `url(${ev.target.result})`; save({ bg: ev.target.result }); };
-            reader.readAsDataURL(e.target.files[0]);
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const maxDim = (mode === 'bg' ? 1000 : 400);
+                    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const format = (mode === 'bg') ? 'image/jpeg' : (file.type === 'image/png' ? 'image/webp' : 'image/jpeg');
+                    const quality = (mode === 'bg' ? 0.3 : 0.5);
+                    const dataUrl = canvas.toDataURL(format, quality);
+                    if (mode === 'bg') {
+                        bgLayer.style.backgroundImage = `url('${dataUrl}')`;
+                        window.saveData({ bg: dataUrl });
+                    } else if (mode === 'note_img') {
+                        const newImg = document.createElement('img');
+                        newImg.src = dataUrl;
+                        newImg.style.width = "96%"; 
+                        newImg.style.margin = "15px auto";
+                        newImg.style.display = "block";
+                        glassTextarea.appendChild(newImg);
+                        triggerSave();
+                    }
+                };
+                img.src = e.target.result;
+            };
+            if (mode === 'audio') {
+                if (audioPlayer.src) URL.revokeObjectURL(audioPlayer.src);
+                audioPlayer.src = URL.createObjectURL(file); audioPlayer.play();
+            } else { reader.readAsDataURL(file); }
         };
 
-        let pos = window.innerWidth;
+        function triggerSave() {
+            clearTimeout(window.tSave);
+            window.tSave = setTimeout(() => window.saveData({ pencilNoteRich: glassTextarea.innerHTML }), 500);
+        }
+
+        glassTextarea.addEventListener('input', triggerSave);
+        inputNote.addEventListener('input', e => {
+            texteCoulissant.textContent = e.target.value || "Book...";
+            clearTimeout(window.t2);
+            window.t2 = setTimeout(() => window.saveData({ text: e.target.value }), 500);
+        });
+        vitesseRange.addEventListener('change', () => window.saveData({ vitesse: vitesseRange.value }));
+
+        let positionX = window.innerWidth;
         function animate() {
-            const v = parseFloat(els.vit.value);
-            if(v > 0) {
-                pos -= v;
-                if(pos < -els.txt.offsetWidth) pos = window.innerWidth;
-                els.txt.style.transform = `translateX(${pos}px)`;
+            const speed = parseInt(vitesseRange.value);
+            if (speed > 0) {
+                positionX -= (speed / 12);
+                if (positionX < -texteCoulissant.offsetWidth) positionX = window.innerWidth;
+                texteCoulissant.style.transform = `translateX(${positionX}px)`;
             }
             requestAnimationFrame(animate);
         }
