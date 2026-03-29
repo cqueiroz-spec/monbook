@@ -17,18 +17,19 @@
             touch-action: manipulation;
         }
 
-        /* Loader invisible par défaut pour éviter l'écran noir */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
-            display: none; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease; pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.4s ease; pointer-events: none;
         }
-        #loader-overlay.active { display: flex; }
 
         #bg-fixed-layer {
             position: fixed; top: 0; left: 0; width: 100vw; height: var(--fixed-vh); z-index: 1;
-            background-color: #001219; background-size: contain; background-position: center center;
-            background-repeat: no-repeat; transition: background-image 0.8s ease-in-out;
+            background-color: #001219; 
+            background-size: contain; /* Respecte l'image entière */
+            background-position: center center;
+            background-repeat: no-repeat; 
+            transition: background-image 0.8s ease-in-out;
             background-image: linear-gradient(180deg, #001219 0%, #002533 100%);
         }
 
@@ -40,7 +41,8 @@
         .scrolling-zone {
             position: absolute; left: 0; width: 100%; height: 60px; display: flex;
             align-items: center; overflow: hidden; z-index: 25; pointer-events: none;
-            top: 45%; transition: top 0.3s ease;
+            top: 45%; /* Position scrupuleuse à 45% */
+            transition: top 0.3s ease;
         }
 
         #texte-coulissant {
@@ -49,7 +51,7 @@
             color: #ffffff; will-change: transform;
         }
 
-        /* --- Menu Principal & Animations Mana 100% --- */
+        /* --- Menu Principal & Animations Mana --- */
         #circular-menu-wrapper {
             position: absolute; top: 32%; left: 50%; width: 140px; height: 140px;
             z-index: 100; pointer-events: none; display: flex; align-items: center;
@@ -104,10 +106,12 @@
         }
         #bottom-panel.ui-visible { opacity: 1; transform: translateY(0); }
 
-        /* --- Zone Note 100% --- */
+        /* --- Zone Note & Fenêtre --- */
         #glass-note-modal {
             position: absolute; top: 15%; bottom: 35%; 
-            left: 50%; width: 90%; max-width: 56vh;
+            left: 50%; 
+            width: 90%; 
+            max-width: 56vh;
             transform: translateX(-50%);
             z-index: 3000; display: none; align-items: center; justify-content: center;
             pointer-events: none; border-radius: 32px; overflow: visible;
@@ -139,7 +143,7 @@
             outline: 3px solid rgba(255,255,255,0.9); box-shadow: 0 0 25px rgba(255,255,255,0.6);
         }
 
-        /* --- BULLE BD 100% --- */
+        /* --- BULLE BD --- */
         #image-bubble {
             position: absolute; min-width: 80px; max-width: 180px; padding: 12px 16px;
             background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
@@ -158,7 +162,7 @@
             border-right: 10px solid transparent; border-top: 12px solid #fff;
         }
 
-        /* --- Pétales Fleur 100% --- */
+        /* --- Système Fleur (Pétales) --- */
         .glass-note-size-toggle {
             position: absolute; top: 30px; left: 30px; width: 44px; height: 44px;
             display: flex; align-items: center; justify-content: center;
@@ -180,8 +184,11 @@
             color: white; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             font-size: 14px; top: 50%; left: 50%; margin-top: -17px; margin-left: -17px;
+            user-select: none; -webkit-user-select: none;
         }
         .size-menu-ring.active .btn-size-action { opacity: 1; pointer-events: auto; }
+        
+        /* Pétales Fleur */
         .size-menu-ring.active .btn-1 { transform: rotate(0deg) translate(40px) rotate(0deg); }
         .size-menu-ring.active .btn-2 { transform: rotate(72deg) translate(40px) rotate(-72deg); }
         .size-menu-ring.active .btn-3 { transform: rotate(144deg) translate(40px) rotate(-144deg); }
@@ -190,7 +197,6 @@
 
         .btn-size-action:active { background: white; color: black; transform: scale(0.85) !important; }
 
-        /* Sync indicator */
         #sync-indicator {
             position: absolute; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
             font-size: 8px; text-transform: uppercase; letter-spacing: 4px; color: rgba(255, 255, 255, 0.4); pointer-events: none;
@@ -203,7 +209,7 @@
 </head>
 <body onclick="handleGlobalClick(event)">
 
-    <div id="loader-overlay">
+    <div id="loader-overlay" class="active">
         <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
 
@@ -254,7 +260,7 @@
                 <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
                     <span style="font-size: 10px; font-weight: 900;">Aa</span>
                 </div>
-                <!-- BOUTON GRAVER (Cloud Save) -->
+                <!-- BOUTON GRAVER (FORCE SAVE) -->
                 <div class="btn-circular" title="Graver" onclick="handleAction(event, 'save')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                 </div>
@@ -281,7 +287,7 @@
             </div>
         </div>
 
-        <div id="sync-indicator">ACTIF</div>
+        <div id="sync-indicator">PRÊT</div>
 
         <input type="file" id="bg-upload" style="display:none;" accept="image/*" onchange="processFile(event, 'bg')">
         <input type="file" id="music-upload" style="display:none;" accept="audio/*" onchange="processFile(event, 'audio')">
@@ -311,8 +317,8 @@
             setTimeout(() => { loaderOverlay.classList.remove('active'); loaderOverlay.style.display = 'none'; }, 500);
         }
 
-        // FORCE LA VUE IMMÉDIATE (Anti-écran noir)
-        hideLoader(); 
+        // VISUEL IMMÉDIAT (SÉCURITÉ DÉFINITIVE)
+        setTimeout(hideLoader, 300); 
 
         const init = async () => {
             try {
@@ -393,6 +399,7 @@
                 });
             } else if (type === 'save') {
                 runManaSequence(btn, () => {
+                    // FORCE LA GRAVURE
                     window.saveData({ 
                         pencilNoteRich: glassTextarea.innerHTML, 
                         text: inputNote.value,
@@ -403,7 +410,7 @@
                     });
                     const ind = document.getElementById('sync-indicator');
                     ind.textContent = "GRAVÉ !"; ind.style.color = "#4ade80";
-                    setTimeout(() => ind.textContent = "ACTIF", 2000);
+                    setTimeout(() => ind.textContent = "PRÊT", 2000);
                 });
             } else if (type === 'gallery') {
                 runManaSequence(btn, () => document.getElementById('bg-upload').click());
