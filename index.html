@@ -17,20 +17,18 @@
             touch-action: manipulation;
         }
 
-        /* Rideau de chargement : Masqué très vite pour éviter l'écran noir sur Vercel */
+        /* Rideau de chargement : Masqué par défaut pour éviter l'écran noir sur Vercel */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
-            display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.3s ease; pointer-events: none;
+            display: none; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease; pointer-events: none;
         }
+        #loader-overlay.active { display: flex; opacity: 1; }
 
         #bg-fixed-layer {
             position: fixed; top: 0; left: 0; width: 100vw; height: var(--fixed-vh); z-index: 1;
-            background-color: #001219; 
-            background-size: contain; /* Respect scrupuleux de l'image entière */
-            background-position: center center;
-            background-repeat: no-repeat; 
-            transition: background-image 0.8s ease-in-out;
+            background-color: #000; background-size: contain; background-position: center center;
+            background-repeat: no-repeat; transition: background-image 0.8s ease-in-out;
             background-image: linear-gradient(180deg, #001219 0%, #002533 100%);
         }
 
@@ -42,7 +40,7 @@
         .scrolling-zone {
             position: absolute; left: 0; width: 100%; height: 60px; display: flex;
             align-items: center; overflow: hidden; z-index: 25; pointer-events: none;
-            top: 45%; /* Position 100% respectée */
+            top: 45%; /* POSITION 100% RESPECTEE */
             transition: top 0.3s ease;
         }
 
@@ -87,7 +85,7 @@
             align-items: center; justify-content: center; color: white;
             pointer-events: auto; transform: translate(-50%, -50%) rotateX(-45deg);
             box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-            transition: top 0.4s ease, left 0.4s ease, transform 0.4s ease;
+            transition: top 0.4s ease, left 0.4s ease, transform 0.4s ease, background 0.2s;
             z-index: 5; cursor: pointer;
         }
         .btn-circular:nth-child(1) { top: 0%; left: 50%; }
@@ -141,7 +139,7 @@
             outline: 3px solid rgba(255,255,255,0.9); box-shadow: 0 0 25px rgba(255,255,255,0.6);
         }
 
-        /* --- BULLE BD --- */
+        /* --- BULLE BD 100% --- */
         #image-bubble {
             position: absolute; min-width: 80px; max-width: 180px; padding: 12px 16px;
             background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
@@ -159,7 +157,7 @@
             border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 12px solid #fff;
         }
 
-        /* --- Système Fleur (Pétales 100%) --- */
+        /* --- Pétales Fleur 100% --- */
         .glass-note-size-toggle {
             position: absolute; top: 30px; left: 30px; width: 44px; height: 44px;
             display: flex; align-items: center; justify-content: center;
@@ -192,6 +190,14 @@
 
         .btn-size-action:active { background: white; color: black; transform: scale(0.85) !important; }
 
+        .glass-note-done-wrapper {
+            position: absolute; top: 30px; right: 30px; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 3100; pointer-events: auto;
+            transform: translate(50%, -50%);
+        }
+        .glass-note-done-dot { width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 10px white; }
+
         #sync-indicator {
             position: absolute; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
             font-size: 8px; text-transform: uppercase; letter-spacing: 4px; color: rgba(255, 255, 255, 0.4); pointer-events: none;
@@ -204,7 +210,8 @@
 </head>
 <body onclick="handleGlobalClick(event)">
 
-    <div id="loader-overlay" class="active">
+    <!-- LOADER DESACTIVE PAR DEFAUT POUR VERCEL -->
+    <div id="loader-overlay">
         <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
 
@@ -229,8 +236,8 @@
                     <div class="btn-size-action btn-5" onpointerdown="event.preventDefault(); handleSelectionAction('normal');">a</div>
                 </div>
 
-                <div class="absolute top-8 right-8 cursor-pointer" onclick="closeGlassNote(event)">
-                    <div class="w-2.5 h-2.5 bg-white/40 rounded-full border border-white shadow-lg"></div>
+                <div class="glass-note-done-wrapper" onpointerdown="event.preventDefault();" onclick="closeGlassNote(event)">
+                    <div id="save-dot" class="glass-note-done-dot"></div>
                 </div>
 
                 <div id="glass-textarea" contenteditable="true" placeholder="Note..."></div>
@@ -256,7 +263,7 @@
                 <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
                     <span style="font-size: 10px; font-weight: 900;">Aa</span>
                 </div>
-                <!-- BOUTON GRAVER (Cloud SAVE) -->
+                <!-- BOUTON GRAVER (FORCE SAVE) -->
                 <div class="btn-circular" title="Graver" onclick="handleAction(event, 'save')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                 </div>
@@ -299,7 +306,7 @@
         const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
         window.addEventListener('load', lockLayout);
 
-        // --- CONFIG FIREBASE ---
+        // --- CONFIG FIREBASE (GitHub/Vercel) ---
         const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
         const app = initializeApp(config);
         const auth = getAuth(app);
@@ -308,16 +315,10 @@
         const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
 
         const loader = document.getElementById('loader-overlay');
-        function hideLoader() {
-            loader.style.opacity = '0';
-            setTimeout(() => {
-                loader.classList.remove('active');
-                loader.style.display = 'none';
-            }, 400);
-        }
-
-        // L'ASTUCE : Lève le rideau en 100ms quoi qu'il arrive (Pour Vercel)
-        setTimeout(hideLoader, 100); 
+        const hideLoader = () => { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 400); };
+        
+        // ASTUCE VERCEL : Débloque le visuel en 100ms quoi qu'il arrive
+        setTimeout(hideLoader, 100);
 
         const init = async () => {
             try {
@@ -400,7 +401,7 @@
                 });
             } else if (type === 'save') {
                 runManaSequence(btn, () => {
-                    // FORCE LA GRAVURE DÉFINITIVE
+                    // FORCE LA GRAVURE
                     window.saveData({ 
                         pencilNoteRich: glassTextarea.innerHTML, 
                         text: inputNote.value,
@@ -410,7 +411,7 @@
                         bg: bgLayer.style.backgroundImage.replace('url("', '').replace('")', '')
                     });
                     const ind = document.getElementById('sync-indicator');
-                    ind.textContent = "GRAVÉ !";
+                    ind.textContent = "GRAVÉ !"; ind.style.color = "#4ade80";
                     setTimeout(() => ind.textContent = "GRAVURE ACTIVE", 2000);
                 });
             } else if (type === 'gallery') {
@@ -465,6 +466,7 @@
             if (e) e.stopPropagation();
             sizeMenu.classList.remove('active');
             imageBubble.classList.remove('active');
+            window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
             glassModal.classList.remove('active');
             setTimeout(() => { glassModal.style.display = 'none'; }, 300);
         };
@@ -474,6 +476,7 @@
             if (e.target.tagName === 'IMG') {
                 e.stopPropagation();
                 activeImage = e.target;
+                activeImage.classList.add('selected-img');
                 imageBubble.innerText = activeImage.getAttribute('data-bubble-text') || "";
                 const imgRect = activeImage.getBoundingClientRect();
                 const containerRect = glassModal.getBoundingClientRect();
@@ -507,9 +510,10 @@
                         const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
                         if (mode === 'bg') {
                             bgLayer.style.backgroundImage = `url('${dataUrl}')`;
+                            window.saveData({ bg: dataUrl });
                         } else {
                             const newImg = document.createElement('img'); newImg.src = dataUrl;
-                            glassTextarea.appendChild(newImg); 
+                            glassTextarea.appendChild(newImg); window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
                         }
                     };
                     img.src = e.target.result;
