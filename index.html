@@ -20,7 +20,7 @@
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
             display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease; pointer-events: none;
+            transition: opacity 0.8s ease; pointer-events: none;
         }
         #loader-overlay.active { pointer-events: auto; }
 
@@ -106,9 +106,7 @@
         /* --- Zone Note 100% --- */
         #glass-note-modal {
             position: absolute; top: 15%; bottom: 35%; 
-            left: 50%; 
-            width: 90%; 
-            max-width: 56vh;
+            left: 50%; width: 90%; max-width: 56vh;
             transform: translateX(-50%);
             z-index: 3000; display: none; align-items: center; justify-content: center;
             pointer-events: none; border-radius: 32px; overflow: visible;
@@ -191,7 +189,14 @@
 
         .btn-size-action:active { background: white; color: black; transform: scale(0.85) !important; }
 
-        /* Sync Indicator */
+        .glass-note-done-wrapper {
+            position: absolute; top: 30px; right: 30px; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 3100; pointer-events: auto;
+            transform: translate(50%, -50%);
+        }
+        .glass-note-done-dot { width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 10px white; }
+
         #sync-indicator {
             position: absolute; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
             font-size: 8px; text-transform: uppercase; letter-spacing: 4px; color: rgba(255, 255, 255, 0.4); pointer-events: none;
@@ -213,6 +218,7 @@
     <div id="portrait-container">
         <audio id="audio-player" loop></audio>
 
+        <!-- Modal Note -->
         <div id="glass-note-modal">
             <div class="glass-note-content" onclick="event.stopPropagation()">
                 <div id="image-bubble" contenteditable="true" onclick="event.stopPropagation()"></div>
@@ -255,7 +261,7 @@
                 <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
                     <span style="font-size: 10px; font-weight: 900;">Aa</span>
                 </div>
-                <!-- BOUTON GRAVER (Cloud Save) -->
+                <!-- BOUTON GRAVER (Sauvegarde Manuelle) -->
                 <div class="btn-circular" title="Graver" onclick="handleAction(event, 'save')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                 </div>
@@ -282,7 +288,7 @@
             </div>
         </div>
 
-        <div id="sync-indicator">SYSTÈME PRÊT</div>
+        <div id="sync-indicator">PRÊT</div>
 
         <input type="file" id="bg-upload" style="display:none;" accept="image/*" onchange="processFile(event, 'bg')">
         <input type="file" id="music-upload" style="display:none;" accept="audio/*" onchange="processFile(event, 'audio')">
@@ -294,11 +300,10 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Fix layout iPad
         const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
         window.addEventListener('load', lockLayout);
 
-        // CONFIGURATION CLOUD (Sera injectée ou locale)
+        // --- FIREBASE CONFIG ---
         const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
         const app = initializeApp(config);
         const auth = getAuth(app);
@@ -324,20 +329,25 @@
         function hideLoader() {
             isFirstLoad = false;
             loaderOverlay.style.opacity = '0';
-            setTimeout(() => loaderOverlay.remove(), 500);
+            setTimeout(() => {
+                loaderOverlay.classList.remove('active');
+                loaderOverlay.style.display = 'none';
+            }, 800);
         }
 
-        // Sécurité chargement immédiat
+        // SÉCURITÉ VERCEL : Si pas de clé, on débloque le visuel après 1 seconde
         setTimeout(() => { if(isFirstLoad) hideLoader(); }, 1000);
 
         const init = async () => {
-            await signInAnonymously(auth);
-            onSnapshot(publicDocRef, snap => {
-                if (snap.exists()) applyData(snap.data());
-                hideLoader();
-                syncIndicator.textContent = "GRAVURE ACTIVE";
-                syncIndicator.style.color = "#4ade80";
-            }, err => { hideLoader(); });
+            try {
+                await signInAnonymously(auth);
+                onSnapshot(publicDocRef, snap => {
+                    if (snap.exists()) applyData(snap.data());
+                    hideLoader();
+                    syncIndicator.textContent = "GRAVURE ACTIVE";
+                    syncIndicator.style.color = "#4ade80";
+                }, err => { hideLoader(); });
+            } catch(e) { hideLoader(); }
         };
         init();
 
@@ -401,7 +411,9 @@
                     window.saveData({ 
                         pencilNoteRich: glassTextarea.innerHTML, 
                         text: inputNote.value,
-                        vitesse: vitesseRange.value
+                        vitesse: vitesseRange.value,
+                        color: texteCoulissant.style.color,
+                        fontIdx: currentFontIdx
                     });
                     syncIndicator.textContent = "GRAVÉ !";
                     setTimeout(() => syncIndicator.textContent = "GRAVURE ACTIVE", 2000);
@@ -436,21 +448,24 @@
             if (activeImage) {
                 activeImage.style.width = (action === 'big') ? "100%" : "96%";
             } else {
-                document.execCommand('fontSize', false, "7");
-                const fontsTags = Array.from(glassTextarea.getElementsByTagName("font"));
-                fontsTags.forEach(f => {
-                    if (f.size === "7" || f.getAttribute('size') === "7") {
-                        f.removeAttribute("size");
-                        if (action === 'big') f.style.fontSize = "62px";
-                        else if (action === 'normal') f.style.fontSize = "22px";
-                        else if (action === 'font') {
-                            noteFontIdx = (noteFontIdx + 1) % fontsRaw.length;
-                            f.style.fontFamily = fontsRaw[noteFontIdx];
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && !sel.isCollapsed) {
+                    const range = sel.getRangeAt(0);
+                    document.execCommand('fontSize', false, "7");
+                    const fontsTags = Array.from(glassTextarea.getElementsByTagName("font"));
+                    fontsTags.forEach(f => {
+                        if (f.size === "7" || f.getAttribute('size') === "7") {
+                            f.removeAttribute("size");
+                            if (action === 'big') f.style.fontSize = "62px";
+                            else if (action === 'normal') f.style.fontSize = "22px";
+                            else if (action === 'font') {
+                                noteFontIdx = (noteFontIdx + 1) % fontsRaw.length;
+                                f.style.fontFamily = fontsRaw[noteFontIdx];
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
-            window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
         };
 
         window.closeGlassNote = (e) => {
@@ -503,7 +518,7 @@
                             window.saveData({ bg: dataUrl });
                         } else {
                             const newImg = document.createElement('img'); newImg.src = dataUrl;
-                            glassTextarea.appendChild(newImg); window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
+                            glassTextarea.appendChild(newImg); 
                         }
                     };
                     img.src = e.target.result;
