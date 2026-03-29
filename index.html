@@ -17,15 +17,17 @@
             touch-action: manipulation;
         }
 
+        /* Rideau de chargement */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
             display: flex; align-items: center; justify-content: center;
             transition: opacity 0.5s ease; pointer-events: none;
         }
+        #loader-overlay.active { pointer-events: auto; }
 
         #bg-fixed-layer {
             position: fixed; top: 0; left: 0; width: 100vw; height: var(--fixed-vh); z-index: 1;
-            background-color: #000; background-size: contain; background-position: center center;
+            background-color: #001219; background-size: contain; background-position: center center;
             background-repeat: no-repeat; transition: background-image 0.8s ease-in-out;
             background-image: linear-gradient(180deg, #001219 0%, #002533 100%);
         }
@@ -38,7 +40,8 @@
         .scrolling-zone {
             position: absolute; left: 0; width: 100%; height: 60px; display: flex;
             align-items: center; overflow: hidden; z-index: 25; pointer-events: none;
-            top: 45%; transition: top 0.3s ease;
+            top: 45%; /* Position 100% respectée */
+            transition: top 0.3s ease;
         }
 
         #texte-coulissant {
@@ -176,6 +179,7 @@
             color: white; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             font-size: 14px; top: 50%; left: 50%; margin-top: -17px; margin-left: -17px;
+            user-select: none;
         }
         .size-menu-ring.active .btn-size-action { opacity: 1; pointer-events: auto; }
         .size-menu-ring.active .btn-1 { transform: rotate(0deg) translate(40px) rotate(0deg); }
@@ -258,7 +262,7 @@
                 <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
                     <span style="font-size: 10px; font-weight: 900;">Aa</span>
                 </div>
-                <!-- BOUTON GRAVER (FORCE SAVE) -->
+                <!-- BOUTON GRAVER (Cloud SAVE) -->
                 <div class="btn-circular" title="Graver" onclick="handleAction(event, 'save')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                 </div>
@@ -297,19 +301,11 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Fix iPad Height
+        // iPad Fix
         const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
         window.addEventListener('load', lockLayout);
 
-        // --- CONFIG FIREBASE ---
-        // ASTUCE VERCEL : Si pas de clé, on ne bloque pas l'écran !
-        const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
-        const app = initializeApp(config);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-book-final';
-        const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
-
+        // --- GESTION DU RIDEAU (Loader) ---
         const loader = document.getElementById('loader-overlay');
         function hideLoader() {
             loader.style.opacity = '0';
@@ -319,19 +315,32 @@
             }, 500);
         }
 
-        // DEBLOCAGE VISUEL IMMEDIAT (Fini l'écran noir)
+        // L'ASTUCE : Lever le rideau en 100ms quoi qu'il arrive (Pour Vercel)
         setTimeout(hideLoader, 100);
 
-        const init = async () => {
-            try {
-                await signInAnonymously(auth);
-                onSnapshot(publicDocRef, snap => {
-                    if (snap.exists()) applyData(snap.data());
-                    document.getElementById('sync-indicator').textContent = "GRAVURE ACTIVE";
-                }, err => { console.log("Cloud waiting keys..."); });
-            } catch(e) {}
-        };
-        init();
+        // --- FIREBASE INIT ---
+        let db, auth, publicDocRef;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-book-final-shared';
+
+        try {
+            const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
+            if (config.apiKey) {
+                const app = initializeApp(config);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+                
+                const initAuth = async () => {
+                    await signInAnonymously(auth);
+                    onSnapshot(publicDocRef, snap => {
+                        if (snap.exists()) applyData(snap.data());
+                        document.getElementById('sync-indicator').textContent = "GRAVURE ACTIVE";
+                        document.getElementById('sync-indicator').style.color = "#4ade80";
+                    });
+                };
+                initAuth();
+            }
+        } catch (e) { console.log("Cloud waiting..."); }
 
         const glassTextarea = document.getElementById('glass-textarea');
         const glassModal = document.getElementById('glass-note-modal');
@@ -352,13 +361,16 @@
                 texteCoulissant.textContent = data.text || "Mana...";
             }
             if (data.color) texteCoulissant.style.color = data.color;
-            if (data.fontIdx !== undefined) texteCoulissant.style.fontFamily = fontsRaw[data.fontIdx];
+            if (data.fontIdx !== undefined) {
+                currentFontIdx = data.fontIdx;
+                texteCoulissant.style.fontFamily = fontsRaw[currentFontIdx];
+            }
             if (data.bg) bgLayer.style.backgroundImage = `url('${data.bg}')`;
             if (data.vitesse !== undefined) vitesseRange.value = data.vitesse;
         }
 
         window.saveData = async (updates) => {
-            if (!auth.currentUser) return;
+            if (!publicDocRef || !auth?.currentUser) return;
             try { await setDoc(publicDocRef, updates, { merge: true }); } catch (e) {}
         };
 
@@ -402,7 +414,7 @@
                 });
             } else if (type === 'save') {
                 runManaSequence(btn, () => {
-                    // FORCE LA GRAVURE DEFINITIVE
+                    // FORCE LA GRAVURE
                     window.saveData({ 
                         pencilNoteRich: glassTextarea.innerHTML, 
                         text: inputNote.value,
@@ -440,7 +452,8 @@
         window.handleSelectionAction = (action) => {
             glassTextarea.focus();
             if (activeImage) {
-                activeImage.style.width = (action === 'big') ? "100%" : "96%";
+                if (action === 'big') activeImage.style.width = "100%";
+                else if (action === 'normal') activeImage.style.width = "96%";
             } else {
                 const sel = window.getSelection();
                 if (sel.rangeCount > 0 && !sel.isCollapsed) {
@@ -466,19 +479,15 @@
             if (e) e.stopPropagation();
             sizeMenu.classList.remove('active');
             imageBubble.classList.remove('active');
-            window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
             glassModal.classList.remove('active');
             setTimeout(() => { glassModal.style.display = 'none'; }, 300);
         };
 
         let activeImage = null;
         glassTextarea.addEventListener('click', (e) => {
-            const prev = glassTextarea.querySelector('.selected-img');
-            if (prev) prev.classList.remove('selected-img');
             if (e.target.tagName === 'IMG') {
                 e.stopPropagation();
                 activeImage = e.target;
-                activeImage.classList.add('selected-img');
                 imageBubble.innerText = activeImage.getAttribute('data-bubble-text') || "";
                 const imgRect = activeImage.getBoundingClientRect();
                 const containerRect = glassModal.getBoundingClientRect();
