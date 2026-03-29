@@ -17,11 +17,13 @@
             touch-action: manipulation;
         }
 
+        /* Suppression du loader bloquant pour Vercel */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
-            display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.4s ease;
+            display: none; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease; pointer-events: none;
         }
+        #loader-overlay.active { display: flex; opacity: 1; pointer-events: auto; }
 
         #bg-fixed-layer {
             position: fixed; top: 0; left: 0; width: 100vw; height: var(--fixed-vh); z-index: 1;
@@ -32,13 +34,14 @@
 
         #portrait-container {
             position: relative; width: 100%; max-width: 420px; height: var(--fixed-vh);
-            margin: 0 auto; z-index: 10; background: transparent; perspective: 1200px;
+            margin: 0 auto; z-index: 10; background: transparent; cursor: pointer; perspective: 1200px;
         }
 
         .scrolling-zone {
             position: absolute; left: 0; width: 100%; height: 60px; display: flex;
             align-items: center; overflow: hidden; z-index: 25; pointer-events: none;
-            top: 45%; transition: top 0.3s ease;
+            top: 45%; /* Position 100% exacte */
+            transition: top 0.3s ease;
         }
 
         #texte-coulissant {
@@ -47,7 +50,7 @@
             color: #ffffff; will-change: transform;
         }
 
-        /* --- Menu Principal & Animations Mana 100% --- */
+        /* --- Menu Principal & Animations Mana --- */
         #circular-menu-wrapper {
             position: absolute; top: 32%; left: 50%; width: 140px; height: 140px;
             z-index: 100; pointer-events: none; display: flex; align-items: center;
@@ -102,7 +105,7 @@
         }
         #bottom-panel.ui-visible { opacity: 1; transform: translateY(0); }
 
-        /* --- Zone Note 100% --- */
+        /* --- Zone Note & Fenêtre 100% --- */
         #glass-note-modal {
             position: absolute; top: 15%; bottom: 35%; 
             left: 50%; width: 90%; max-width: 56vh;
@@ -127,6 +130,34 @@
             text-align: center; overflow-y: auto; padding: 75px 15px 45px 15px; 
             text-shadow: 0 2px 10px rgba(0,0,0,0.7); display: block;
         }
+        
+        #glass-textarea img { 
+            width: 96%; max-width: 100%; height: auto; border-radius: 12px; 
+            margin: 15px auto; display: block; transition: width 0.2s ease;
+            cursor: pointer;
+        }
+        #glass-textarea img.selected-img {
+            outline: 3px solid rgba(255,255,255,0.9); box-shadow: 0 0 25px rgba(255,255,255,0.6);
+        }
+
+        /* --- BULLE BD 100% --- */
+        #image-bubble {
+            position: absolute; min-width: 80px; max-width: 180px; padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(10px);
+            border-radius: 24px; color: #1a1a1a; font-weight: 800; font-size: 14px;
+            z-index: 4000; pointer-events: auto; opacity: 0;
+            transform: scale(0.6) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            left: 50%; top: 50%; text-align: center; line-height: 1.2;
+            outline: none; border: 2px solid #fff;
+        }
+        #image-bubble.active { opacity: 1; transform: scale(1) translateY(0) translateX(-50%); }
+        #image-bubble::after {
+            content: ''; position: absolute; bottom: -10px; left: 50%; 
+            transform: translateX(-50%); border-left: 10px solid transparent;
+            border-right: 10px solid transparent; border-top: 12px solid #fff;
+        }
 
         /* --- Pétales Fleur 100% --- */
         .glass-note-size-toggle {
@@ -136,6 +167,7 @@
             transform: translate(-50%, -50%);
         }
         .size-dot { width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 15px white; }
+        
         .size-menu-ring {
             position: absolute; top: 30px; left: 30px; width: 0; height: 0;
             display: flex; align-items: center; justify-content: center;
@@ -149,6 +181,7 @@
             color: white; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             font-size: 14px; top: 50%; left: 50%; margin-top: -17px; margin-left: -17px;
+            user-select: none;
         }
         .size-menu-ring.active .btn-size-action { opacity: 1; pointer-events: auto; }
         .size-menu-ring.active .btn-1 { transform: rotate(0deg) translate(40px) rotate(0deg); }
@@ -157,29 +190,21 @@
         .size-menu-ring.active .btn-4 { transform: rotate(216deg) translate(40px) rotate(-216deg); }
         .size-menu-ring.active .btn-5 { transform: rotate(288deg) translate(40px) rotate(-288deg); }
 
-        /* --- BULLE BD 100% --- */
-        #image-bubble {
-            position: absolute; min-width: 80px; max-width: 180px; padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            border-radius: 24px; color: #1a1a1a; font-weight: 800; font-size: 14px;
-            z-index: 4000; pointer-events: auto; opacity: 0;
-            transform: scale(0.6) translateY(20px);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-            left: 50%; top: 50%; text-align: center; line-height: 1.2;
-            outline: none; border: 2px solid #fff;
-        }
-        #image-bubble.active { opacity: 1; transform: scale(1) translateY(0) translateX(-50%); }
+        .btn-size-action:active { background: white; color: black; transform: scale(0.85) !important; }
 
         #sync-indicator {
             position: absolute; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
             font-size: 8px; text-transform: uppercase; letter-spacing: 4px; color: rgba(255, 255, 255, 0.4); pointer-events: none;
         }
+        .glass-input {
+            width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px; padding: 10px; color: white; outline: none; resize: none;
+        }
     </style>
 </head>
 <body id="main-body" onclick="handleGlobalClick(event)">
 
-    <!-- LOADER SÉCURISÉ -->
+    <!-- LOADER DESACTIVER PAR DEFAUT POUR EVITER L'ECRAN NOIR -->
     <div id="loader-overlay">
         <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
@@ -189,7 +214,7 @@
     <div id="portrait-container">
         <audio id="audio-player" loop></audio>
 
-        <!-- Note Modal -->
+        <!-- Modal Note -->
         <div id="glass-note-modal">
             <div class="glass-note-content" onclick="event.stopPropagation()">
                 <div id="image-bubble" contenteditable="true" onclick="event.stopPropagation()"></div>
@@ -232,7 +257,7 @@
                 <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
                     <span style="font-size: 10px; font-weight: 900;">Aa</span>
                 </div>
-                <!-- BOUTON GRAVER -->
+                <!-- BOUTON GRAVER (FORCE SAVE) -->
                 <div class="btn-circular" title="Graver" onclick="handleAction(event, 'save')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                 </div>
@@ -253,7 +278,7 @@
         </div>
 
         <div id="bottom-panel" onclick="event.stopPropagation()">
-            <textarea id="input-note" rows="1" class="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-white outline-none" placeholder="Message..."></textarea>
+            <textarea id="input-note" rows="1" class="glass-input" placeholder="Message défilant..."></textarea>
             <div class="w-full py-4 opacity-50">
                 <input type="range" id="vitesse-range" min="0" max="80" value="20" class="w-full h-1 bg-white/10 appearance-none rounded-full accent-white">
             </div>
@@ -271,25 +296,22 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // iPad Height Fix
         const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
         window.addEventListener('load', lockLayout);
 
-        // --- CONFIG FIREBASE ---
+        // --- CONFIGURATION CLOUD ---
         const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
         const app = initializeApp(config);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-book-final';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-v4-final-sync';
         const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
 
+        // FORCE L'AFFICHAGE IMMEDIAT (Plus d'écran noir)
         const loader = document.getElementById('loader-overlay');
-        const hideLoader = () => {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.remove(), 400); // Suppression physique du loader pour débloquer les clics
-        };
-        
-        // DEBLOCAGE VISUEL IMMEDIAT (Anti-écran noir Vercel)
-        setTimeout(hideLoader, 200);
+        const hideLoader = () => { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 400); };
+        setTimeout(hideLoader, 100); 
 
         const init = async () => {
             try {
@@ -297,8 +319,8 @@
                 onSnapshot(publicDocRef, snap => {
                     if (snap.exists()) applyData(snap.data());
                     document.getElementById('sync-indicator').textContent = "GRAVURE ACTIVE";
-                }, err => { console.log("Waiting keys..."); });
-            } catch(e) { console.log("Offline mode"); }
+                }, err => { console.log("Waiting for cloud keys..."); });
+            } catch(e) {}
         };
         init();
 
@@ -371,6 +393,7 @@
                 });
             } else if (type === 'save') {
                 runManaSequence(btn, () => {
+                    // FORCE LA GRAVURE DÉFINITIVE
                     window.saveData({ 
                         pencilNoteRich: glassTextarea.innerHTML, 
                         text: inputNote.value,
@@ -434,7 +457,6 @@
             if (e) e.stopPropagation();
             sizeMenu.classList.remove('active');
             imageBubble.classList.remove('active');
-            window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
             glassModal.classList.remove('active');
             setTimeout(() => { glassModal.style.display = 'none'; }, 300);
         };
