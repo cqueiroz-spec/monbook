@@ -14,9 +14,15 @@
             margin: 0; padding: 0; height: var(--fixed-vh); width: 100%; background-color: #000;
             font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
             -webkit-font-smoothing: antialiased; overflow: hidden; position: fixed;
-            touch-action: manipulation; -webkit-user-select: none; user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
         }
+
+        #loader-overlay {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease; pointer-events: none;
+        }
+        #loader-overlay.active { pointer-events: auto; }
 
         #bg-fixed-layer {
             position: fixed; top: 0; left: 0; width: 100vw; height: var(--fixed-vh); z-index: 1;
@@ -27,7 +33,7 @@
 
         #portrait-container {
             position: relative; width: 100%; max-width: 420px; height: var(--fixed-vh);
-            margin: 0 auto; z-index: 10; background: transparent; perspective: 1200px;
+            margin: 0 auto; z-index: 10; background: transparent; cursor: pointer; perspective: 1200px;
         }
 
         .scrolling-zone {
@@ -42,14 +48,13 @@
             color: #ffffff; will-change: transform;
         }
 
-        /* --- Menu Principal & Fluidité Réglée --- */
+        /* --- Menu Principal & Animations Mana --- */
         #circular-menu-wrapper {
             position: absolute; top: 32%; left: 50%; width: 140px; height: 140px;
             z-index: 100; pointer-events: none; display: flex; align-items: center;
             justify-content: center; transform-style: preserve-3d;
             transform: translate(-50%, -50%) rotateX(45deg) scale(0);
-            opacity: 0; transition: opacity 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            visibility: hidden;
+            opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; visibility: hidden;
         }
         #circular-menu-wrapper.ui-visible { opacity: 1; transform: translate(-50%, -50%) rotateX(45deg) scale(1); visibility: visible; }
         #menu-ring { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
@@ -72,17 +77,15 @@
         @keyframes crystalShimmer { 0% { filter: brightness(1) blur(0px); box-shadow: 0 0 10px white; } 100% { filter: brightness(1.8) blur(1px); box-shadow: 0 0 60px rgba(255,255,255,0.4); } }
 
         .btn-circular {
-            position: absolute; width: 36px; height: 36px; border-radius: 50%;
+            position: absolute; width: 22px; height: 22px; border-radius: 50%;
             background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(8px);
             border: 1.5px solid rgba(255, 255, 255, 0.7); display: flex;
             align-items: center; justify-content: center; color: white;
             pointer-events: auto; transform: translate(-50%, -50%) rotateX(-45deg);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            transition: top 0.4s ease, left 0.4s ease, transform 0.4s ease, background 0.2s;
             z-index: 5; cursor: pointer;
         }
-        .btn-circular:active { transform: translate(-50%, -50%) rotateX(-45deg) scale(0.85); background: white; color: black; }
-        
         .btn-circular:nth-child(1) { top: 0%; left: 50%; }
         .btn-circular:nth-child(2) { top: 14.6%; left: 85.4%; }
         .btn-circular:nth-child(3) { top: 50%; left: 100%; }
@@ -93,27 +96,27 @@
         .btn-circular:nth-child(8) { top: 14.6%; left: 14.6%; }
 
         #bottom-panel {
-            position: absolute; bottom: 0; width: 100%; padding: 20px 25px calc(25px + env(safe-area-inset-bottom)) 25px;
+            position: absolute; bottom: 0; width: 100%; padding: 20px 25px calc(20px + env(safe-area-inset-bottom)) 25px;
             background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
-            z-index: 50; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            opacity: 0; transform: translateY(30px); pointer-events: auto;
+            z-index: 50; transition: all 0.4s ease; opacity: 0;
+            transform: translateY(20px); pointer-events: auto;
         }
         #bottom-panel.ui-visible { opacity: 1; transform: translateY(0); }
 
-        /* --- Zone Note & Pétales Originaux --- */
+        /* --- Zone Note & Fenêtre --- */
         #glass-note-modal {
             position: absolute; top: 15%; bottom: 35%; 
-            left: 50%; width: 92%; max-width: 58vh; transform: translateX(-50%);
+            left: 50%; width: 90%; max-width: 56vh; transform: translateX(-50%);
             z-index: 3000; display: none; align-items: center; justify-content: center;
-            pointer-events: none; border-radius: 32px;
+            pointer-events: none; border-radius: 32px; overflow: visible;
         }
         #glass-note-modal.active { display: flex; }
 
         .glass-note-content {
             width: 100%; height: 100%; position: relative; 
-            display: block; background: rgba(255, 255, 255, 0.35); 
-            backdrop-filter: saturate(160%) blur(30px); -webkit-backdrop-filter: saturate(160%) blur(30px);
-            border-radius: 32px; pointer-events: auto;
+            display: block; background: rgba(255, 255, 255, 0.38); 
+            backdrop-filter: saturate(150%) blur(20px); -webkit-backdrop-filter: saturate(150%) blur(20px);
+            border-radius: 32px; overflow: visible; pointer-events: auto;
             opacity: 0; transition: opacity 0.5s ease;
         }
         #glass-note-modal.active .glass-note-content { opacity: 1; }
@@ -121,76 +124,96 @@
         #glass-textarea {
             width: 100%; height: 100%; background: transparent; border: none;
             outline: none; color: white; font-size: 22px; font-weight: 800;
-            text-align: center; overflow-y: auto; padding: 90px 25px 50px 25px; 
-            text-shadow: 0 2px 12px rgba(0,0,0,0.6); display: block;
-            -webkit-user-select: text; user-select: text;
+            text-align: center; overflow-y: auto; padding: 75px 15px 45px 15px; 
+            text-shadow: 0 2px 10px rgba(0,0,0,0.7); display: block;
         }
         
         #glass-textarea img { 
-            width: 96%; max-width: 100%; height: auto; border-radius: 16px; 
-            margin: 25px auto; display: block; box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-            transition: transform 0.2s;
+            width: 96%; max-width: 100%; height: auto; border-radius: 12px; 
+            margin: 15px auto; display: block; transition: width 0.2s ease;
+            cursor: pointer;
         }
-        #glass-textarea img.selected-img { outline: 3px solid white; transform: scale(1.02); }
+        #glass-textarea img.selected-img {
+            outline: 3px solid rgba(255,255,255,0.9); box-shadow: 0 0 25px rgba(255,255,255,0.6);
+        }
 
-        /* Système Fleur 100% */
+        /* --- BULLE DE BD ÉDITABLE --- */
+        #image-bubble {
+            position: absolute; min-width: 80px; max-width: 180px; padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(10px);
+            border-radius: 24px; color: #1a1a1a; font-weight: 800; font-size: 14px;
+            z-index: 4000; pointer-events: auto; opacity: 0;
+            transform: scale(0.6) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            left: 50%; top: 50%; text-align: center; line-height: 1.2;
+            outline: none; border: 2px solid #fff;
+        }
+        #image-bubble.active { opacity: 1; transform: scale(1) translateY(0) translateX(-50%); }
+        #image-bubble::after {
+            content: ''; position: absolute; bottom: -10px; left: 50%; 
+            transform: translateX(-50%); border-left: 10px solid transparent;
+            border-right: 10px solid transparent; border-top: 12px solid rgba(255, 255, 255, 0.92);
+        }
+
+        /* --- Système Fleur (Haut Note) --- */
         .glass-note-size-toggle {
-            position: absolute; top: 35px; left: 35px; width: 55px; height: 55px;
+            position: absolute; top: 30px; left: 30px; width: 44px; height: 44px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; z-index: 3100; pointer-events: auto;
             transform: translate(-50%, -50%);
         }
-        .size-dot { width: 14px; height: 14px; background: white; border-radius: 50%; box-shadow: 0 0 20px white; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .size-dot { width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 15px white; }
         
         .size-menu-ring {
-            position: absolute; top: 35px; left: 35px; width: 0; height: 0;
+            position: absolute; top: 30px; left: 30px; width: 0; height: 0;
             display: flex; align-items: center; justify-content: center;
             pointer-events: none; z-index: 3090; transform: translate(-50%, -50%);
+            overflow: visible;
         }
         .btn-size-action {
-            position: absolute; width: 42px; height: 42px; border-radius: 50%;
-            background: rgba(255,255,255,0.3); backdrop-filter: blur(10px);
+            position: absolute; width: 34px; height: 34px; border-radius: 50%;
+            background: rgba(255,255,255,0.35); backdrop-filter: blur(10px);
             border: 1.5px solid rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center;
-            color: white; opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            font-weight: 900; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-            font-size: 16px; top: 50%; left: 50%; margin-top: -21px; margin-left: -21px;
+            color: white; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            font-size: 14px; top: 50%; left: 50%; margin-top: -17px; margin-left: -17px;
+            user-select: none;
         }
         .size-menu-ring.active .btn-size-action { opacity: 1; pointer-events: auto; }
-        .size-menu-ring.active .btn-1 { transform: rotate(0deg) translate(50px) rotate(0deg); }
-        .size-menu-ring.active .btn-2 { transform: rotate(72deg) translate(50px) rotate(-72deg); }
-        .size-menu-ring.active .btn-3 { transform: rotate(144deg) translate(50px) rotate(-144deg); }
-        .size-menu-ring.active .btn-4 { transform: rotate(216deg) translate(50px) rotate(-216deg); }
-        .size-menu-ring.active .btn-5 { transform: rotate(288deg) translate(50px) rotate(-288deg); }
+        /* Pétales Fleur */
+        .size-menu-ring.active .btn-1 { transform: rotate(0deg) translate(40px) rotate(0deg); }
+        .size-menu-ring.active .btn-2 { transform: rotate(72deg) translate(40px) rotate(-72deg); }
+        .size-menu-ring.active .btn-3 { transform: rotate(144deg) translate(40px) rotate(-144deg); }
+        .size-menu-ring.active .btn-4 { transform: rotate(216deg) translate(40px) rotate(-216deg); }
+        .size-menu-ring.active .btn-5 { transform: rotate(288deg) translate(40px) rotate(-288deg); }
 
-        /* Point de fermeture droit */
+        .btn-size-action:active { background: white; color: black; transform: scale(0.85) !important; }
+
+        /* Point Droit */
         .glass-note-done-wrapper {
-            position: absolute; top: 35px; right: 35px; width: 55px; height: 55px;
+            position: absolute; top: 30px; right: 30px; width: 44px; height: 44px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; z-index: 3100; pointer-events: auto;
             transform: translate(50%, -50%);
         }
-        .glass-note-done-dot { width: 12px; height: 12px; background: white; border-radius: 50%; box-shadow: 0 0 15px white; }
-
-        /* Bulle BD interactrice */
-        #image-bubble {
-            position: absolute; min-width: 100px; max-width: 200px; padding: 16px 20px;
-            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(12px);
-            border-radius: 28px; color: #000; font-weight: 900; font-size: 16px;
-            z-index: 4000; pointer-events: auto; opacity: 0;
-            transform: scale(0.6) translateY(20px);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 12px 45px rgba(0,0,0,0.5);
-            left: 50%; top: 50%; text-align: center; line-height: 1.2;
-        }
-        #image-bubble.active { opacity: 1; transform: scale(1) translateY(0) translateX(-50%); }
+        .glass-note-done-dot { width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 10px white; }
 
         #sync-indicator {
-            position: absolute; bottom: calc(15px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
-            font-size: 10px; text-transform: uppercase; letter-spacing: 5px; color: rgba(255, 255, 255, 0.5); pointer-events: none;
+            position: absolute; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+            font-size: 8px; text-transform: uppercase; letter-spacing: 4px; color: rgba(255, 255, 255, 0.4); pointer-events: none;
+        }
+        .glass-input {
+            width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px; padding: 10px; color: white; outline: none; resize: none;
         }
     </style>
 </head>
-<body onpointerdown="handleGlobalAction(event)">
+<body onclick="handleGlobalClick(event)">
+
+    <div id="loader-overlay" class="active">
+        <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+    </div>
 
     <div id="bg-fixed-layer"></div>
 
@@ -199,13 +222,12 @@
 
         <!-- Modal Note -->
         <div id="glass-note-modal">
-            <div class="glass-note-content" onpointerdown="event.stopPropagation()">
-                <div id="image-bubble" contenteditable="true" onpointerdown="event.stopPropagation()"></div>
+            <div class="glass-note-content" onclick="event.stopPropagation()">
+                <div id="image-bubble" contenteditable="true" onclick="event.stopPropagation()"></div>
 
                 <div class="glass-note-size-toggle" onpointerdown="event.preventDefault(); toggleSizeMenu(event);">
                     <div id="size-toggle-dot" class="size-dot"></div>
                 </div>
-                
                 <div id="size-menu" class="size-menu-ring">
                     <div class="btn-size-action btn-1" onpointerdown="event.preventDefault(); handleSelectionAction('big');">A</div>
                     <div class="btn-size-action btn-2" onpointerdown="event.stopPropagation()"></div>
@@ -215,44 +237,44 @@
                 </div>
 
                 <div class="glass-note-done-wrapper" onpointerdown="event.preventDefault();" onclick="closeGlassNote(event)">
-                    <div class="glass-note-done-dot"></div>
+                    <div id="save-dot" class="glass-note-done-dot"></div>
                 </div>
 
                 <div id="glass-textarea" contenteditable="true" placeholder="Note..."></div>
                 
-                <div class="absolute bottom-10 left-10 p-4 bg-white/10 rounded-full cursor-pointer active:bg-white/20" onpointerdown="event.preventDefault(); document.getElementById('note-img-upload').click()">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3a2 2 0 0 0-3 0l-4 4"/></svg>
+                <div class="absolute bottom-6 left-6 p-2 bg-white/10 rounded-full cursor-pointer hover:bg-white/20" onpointerdown="event.preventDefault();" onclick="document.getElementById('note-img-upload').click()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3a2 2 0 0 0-3 0l-4 4"/></svg>
                 </div>
             </div>
         </div>
 
-        <!-- Menu Circulaire Principal -->
         <div id="circular-menu-wrapper">
             <div id="menu-ring">
-                <div class="btn-circular" title="Galerie" onpointerdown="handleAction(event, 'gallery')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3a2 2 0 0 0-3 0l-4 4"/></svg>
+                <div class="btn-circular" title="Galerie" onclick="handleAction(event, 'gallery')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3a2 2 0 0 0-3 0l-4 4"/></svg>
                 </div>
-                <div class="btn-circular" title="Livre" onpointerdown="handleAction(event, 'book')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <div class="btn-circular" title="Livre" onclick="handleAction(event, 'book')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 </div>
-                <div class="btn-circular" title="Couleur" onpointerdown="event.stopPropagation()">
-                    <div id="color-preview" class="w-4 h-4 rounded-full bg-white border border-white"></div>
-                    <input type="color" id="color-picker" value="#ffffff" class="absolute inset-0 opacity-0 cursor-pointer" oninput="handleAction(event, 'color_live')" onchange="handleAction(event, 'color_final')">
+                <div class="btn-circular" title="Couleur">
+                    <div id="color-preview" style="width:12px; height:12px; border-radius:50%; background:white; border:1px solid white;"></div>
+                    <input type="color" id="color-picker" value="#ffffff" class="absolute inset-0 opacity-0 cursor-pointer" onclick="event.stopPropagation();" oninput="handleAction(event, 'color_live')" onchange="handleAction(event, 'color_final')">
                 </div>
-                <div class="btn-circular" title="Police" onpointerdown="handleAction(event, 'font')">
-                    <span style="font-size: 11px; font-weight: 900;">Aa</span>
+                <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
+                    <span style="font-size: 10px; font-weight: 900;">Aa</span>
                 </div>
-                <div class="btn-circular" title="Graver" onpointerdown="handleAction(event, 'save')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                <!-- BOUTON GRAVER -->
+                <div class="btn-circular" title="Graver" onclick="handleAction(event, 'save')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                 </div>
-                <div class="btn-circular" title="Crayon" onpointerdown="handleAction(event, 'pencil')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                <div class="btn-circular" title="Crayon" onclick="handleAction(event, 'pencil')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                 </div>
-                <div class="btn-circular" title="Musique" onpointerdown="handleAction(event, 'files')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>
+                <div class="btn-circular" title="Fichiers" onclick="handleAction(event, 'files')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>
                 </div>
-                <div id="btn-music-play" class="btn-circular" title="Lecture" onpointerdown="handleAction(event, 'music_toggle')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <div id="btn-music-play" class="btn-circular" title="Musique" onclick="handleAction(event, 'music_toggle')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                 </div>
             </div>
         </div>
@@ -261,16 +283,15 @@
             <span id="texte-coulissant">Mana...</span>
         </div>
 
-        <div id="bottom-panel" onpointerdown="event.stopPropagation()">
-            <textarea id="input-note" rows="1" class="w-full bg-white/10 border border-white/20 rounded-xl p-5 text-white outline-none text-center font-bold text-lg" placeholder="Message..."></textarea>
-            <div class="w-full py-6 opacity-30">
-                <input type="range" id="vitesse-range" min="0" max="80" value="20" class="w-full h-1 bg-white/20 appearance-none rounded-full accent-white">
+        <div id="bottom-panel" onclick="event.stopPropagation()">
+            <textarea id="input-note" rows="1" class="glass-input" placeholder="Message..."></textarea>
+            <div class="w-full py-4 opacity-50">
+                <input type="range" id="vitesse-range" min="0" max="80" value="20" class="w-full h-1 bg-white/10 appearance-none rounded-full accent-white">
             </div>
         </div>
 
         <div id="sync-indicator">PRÊT</div>
 
-        <!-- Hidden Uploads -->
         <input type="file" id="bg-upload" style="display:none;" accept="image/*" onchange="processFile(event, 'bg')">
         <input type="file" id="music-upload" style="display:none;" accept="audio/*" onchange="processFile(event, 'audio')">
         <input type="file" id="note-img-upload" style="display:none;" accept="image/*" onchange="processFile(event, 'note_img')">
@@ -281,16 +302,23 @@
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // iPad fix
         const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
         window.addEventListener('load', lockLayout);
 
-        // --- FIREBASE & MEMOIRE iPad ---
-        let db, auth, publicDocRef;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-pro-mode-final';
+        // --- GESTION DU RIDEAU (Fini l'écran noir) ---
+        const loader = document.getElementById('loader-overlay');
+        const hideLoader = () => { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 400); };
+        setTimeout(hideLoader, 200); 
 
-        // 1. CHARGER L'iPad IMMEDIATEMENT
-        const localMemory = JSON.parse(localStorage.getItem('mana_memory') || '{}');
-        if (localMemory) { applyData(localMemory); }
+        // --- FIREBASE ET MÉMOIRE iPad ---
+        let db, auth, publicDocRef;
+        let isConfigured = false;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-pro-drafts-v2';
+
+        // Charger immédiatement l'iPad
+        const localMemory = JSON.parse(localStorage.getItem('mana_local') || '{}');
+        if (localMemory) { setTimeout(() => applyData(localMemory), 10); }
 
         try {
             const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
@@ -300,6 +328,7 @@
                 auth = getAuth(app);
                 db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
                 publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+                isConfigured = true;
                 
                 const initAuth = async () => {
                     await signInAnonymously(auth);
@@ -307,7 +336,7 @@
                         if (snap.exists()) {
                             const data = snap.data();
                             applyData(data);
-                            localStorage.setItem('mana_memory', JSON.stringify(data));
+                            localStorage.setItem('mana_local', JSON.stringify(data));
                         }
                         document.getElementById('sync-indicator').textContent = "SYCHRO ACTIVE";
                         document.getElementById('sync-indicator').style.color = "#4ade80";
@@ -315,7 +344,7 @@
                 };
                 initAuth();
             }
-        } catch (e) {}
+        } catch (e) { console.log("Cloud waiting..."); }
 
         const glassTextarea = document.getElementById('glass-textarea');
         const glassModal = document.getElementById('glass-note-modal');
@@ -334,9 +363,7 @@
         const fontsRaw = ["Inter", "Playfair Display", "JetBrains Mono", "Dancing Script", "Montserrat"];
 
         function applyData(data) {
-            if (document.activeElement !== glassTextarea && data.pencilNoteRich !== undefined) {
-                glassTextarea.innerHTML = data.pencilNoteRich;
-            }
+            if (document.activeElement !== glassTextarea && data.pencilNoteRich !== undefined) glassTextarea.innerHTML = data.pencilNoteRich;
             if (document.activeElement !== inputNote && data.text !== undefined) {
                 inputNote.value = data.text;
                 texteCoulissant.textContent = data.text || "Mana...";
@@ -350,7 +377,7 @@
             if (data.vitesse !== undefined) vitesseRange.value = data.vitesse;
         }
 
-        // --- GRAVURE DANS LA PUCE iPad (AUTO) ---
+        // --- SAUVEGARDE LOCALE INSTANTANÉE ---
         function instantLocalSave() {
             const state = {
                 pencilNoteRich: glassTextarea.innerHTML,
@@ -360,16 +387,16 @@
                 fontIdx: currentFontIdx,
                 bg: bgLayer.style.backgroundImage.replace(/^url\(["']?/, '').replace(/["']?\)$/, '')
             };
-            localStorage.setItem('mana_memory', JSON.stringify(state));
+            localStorage.setItem('mana_local', JSON.stringify(state));
         }
 
         window.saveData = async (updates) => {
-            instantLocalSave(); 
-            if (!publicDocRef || !auth?.currentUser) return;
+            instantLocalSave();
+            if (!isConfigured || !auth?.currentUser) return;
             try { await setDoc(publicDocRef, updates, { merge: true }); } catch (e) {}
         };
 
-        // Écoute instantanée
+        // Écouter chaque frappe
         glassTextarea.addEventListener('input', instantLocalSave);
         inputNote.addEventListener('input', () => {
             texteCoulissant.textContent = inputNote.value || "Mana...";
@@ -390,7 +417,7 @@
             }, 1000);
         };
 
-        window.handleGlobalAction = (e) => {
+        window.handleGlobalClick = (e) => {
             if (imageBubble.classList.contains('active')) return imageBubble.classList.remove('active');
             if (circWrapper.classList.contains('ui-visible')) {
                 circWrapper.classList.remove('ui-visible');
@@ -426,8 +453,8 @@
                         bg: currentBg
                     });
                     const ind = document.getElementById('sync-indicator');
-                    ind.textContent = "GRAVÉ !"; ind.style.color = "#4ade80";
-                    setTimeout(() => ind.textContent = "SYCHRO ACTIVE", 3000);
+                    ind.textContent = "GRAVÉ !";
+                    setTimeout(() => ind.textContent = "SYNCHRO ACTIVE", 3000);
                 });
             } else if (type === 'gallery') {
                 runManaSequence(btn, () => document.getElementById('bg-upload').click());
@@ -439,10 +466,6 @@
                     texteCoulissant.style.fontFamily = fontsRaw[currentFontIdx];
                     instantLocalSave();
                 });
-            } else if (type === 'color_live') {
-                texteCoulissant.style.color = document.getElementById('color-picker').value;
-            } else if (type === 'color_final') {
-                window.saveData({ color: document.getElementById('color-picker').value });
             } else if (type === 'music_toggle') {
                 runManaSequence(btn, () => { if (audioPlayer.src) audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause(); });
             } else { runManaSequence(btn); }
@@ -451,7 +474,7 @@
         window.toggleSizeMenu = (e) => {
             e.stopPropagation();
             const active = sizeMenu.classList.toggle('active');
-            document.getElementById('size-toggle-dot').style.transform = active ? 'scale(1.4)' : 'scale(1)';
+            document.getElementById('size-toggle-dot').style.transform = active ? 'scale(1.5)' : 'scale(1)';
         };
 
         window.handleSelectionAction = (action) => {
@@ -498,7 +521,6 @@
                 const prev = glassTextarea.querySelector('.selected-img');
                 if (prev) prev.classList.remove('selected-img');
                 activeImage.classList.add('selected-img');
-                
                 imageBubble.innerText = activeImage.getAttribute('data-bubble-text') || "";
                 const imgRect = activeImage.getBoundingClientRect();
                 const containerRect = glassModal.getBoundingClientRect();
