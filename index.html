@@ -17,20 +17,16 @@
             touch-action: manipulation;
         }
 
-        /* Loader invisible par défaut pour Vercel */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
             display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.3s ease; pointer-events: none;
+            transition: opacity 0.5s ease; pointer-events: none;
         }
 
         #bg-fixed-layer {
             position: fixed; top: 0; left: 0; width: 100vw; height: var(--fixed-vh); z-index: 1;
-            background-color: #001219; 
-            background-size: contain; 
-            background-position: center center;
-            background-repeat: no-repeat; 
-            transition: background-image 0.8s ease-in-out;
+            background-color: #000; background-size: contain; background-position: center center;
+            background-repeat: no-repeat; transition: background-image 0.8s ease-in-out;
             background-image: linear-gradient(180deg, #001219 0%, #002533 100%);
         }
 
@@ -42,8 +38,7 @@
         .scrolling-zone {
             position: absolute; left: 0; width: 100%; height: 60px; display: flex;
             align-items: center; overflow: hidden; z-index: 25; pointer-events: none;
-            top: 45%; 
-            transition: top 0.3s ease;
+            top: 45%; transition: top 0.3s ease;
         }
 
         #texte-coulissant {
@@ -192,6 +187,7 @@
 </head>
 <body onclick="handleGlobalClick(event)">
 
+    <!-- LOADER -->
     <div id="loader-overlay">
         <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
@@ -243,7 +239,7 @@
                 <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
                     <span style="font-size: 10px; font-weight: 900;">Aa</span>
                 </div>
-                <!-- BOUTON GRAVER (SAUVEGARDE PRODRAFTS STYLE) -->
+                <!-- BOUTON GRAVER (SAUVEGARDE MANUELLE FORCEE) -->
                 <div class="btn-circular" title="Graver" onclick="handleAction(event, 'save')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                 </div>
@@ -289,29 +285,32 @@
         // --- GESTION DU RIDEAU ---
         const loader = document.getElementById('loader-overlay');
         const hideLoader = () => { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 400); };
-        setTimeout(hideLoader, 150); 
+        
+        // ASTUCE VERCEL : Débloque quoi qu'il arrive après 200ms
+        setTimeout(hideLoader, 200);
 
         // --- FIREBASE INIT ---
         let db, auth, publicDocRef;
-        let isConfigured = false;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-pro-drafts';
+        let userReady = false;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-prodrafts-sync';
 
         try {
             const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
             if (config.apiKey) {
                 const app = initializeApp(config);
                 auth = getAuth(app);
+                // PERSISTANCE PRODRAFTS (Offline + Online)
                 db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
                 publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
-                isConfigured = true;
                 
                 const initAuth = async () => {
                     await signInAnonymously(auth);
+                    userReady = true;
                     onSnapshot(publicDocRef, snap => {
                         if (snap.exists()) applyData(snap.data());
                         document.getElementById('sync-indicator').textContent = "GRAVURE SYNCHRONISÉE";
                         document.getElementById('sync-indicator').style.color = "#4ade80";
-                    });
+                    }, err => { console.log("Waiting keys..."); });
                 };
                 initAuth();
             }
@@ -334,7 +333,9 @@
         const fontsRaw = ["Inter", "Playfair Display", "JetBrains Mono", "Dancing Script", "Montserrat"];
 
         function applyData(data) {
-            if (document.activeElement !== glassTextarea && data.pencilNoteRich !== undefined) glassTextarea.innerHTML = data.pencilNoteRich;
+            if (document.activeElement !== glassTextarea && data.pencilNoteRich !== undefined) {
+                glassTextarea.innerHTML = data.pencilNoteRich;
+            }
             if (document.activeElement !== inputNote && data.text !== undefined) {
                 inputNote.value = data.text;
                 texteCoulissant.textContent = data.text || "Mana...";
@@ -349,8 +350,12 @@
         }
 
         window.saveData = async (updates) => {
-            if (!isConfigured || !auth.currentUser) return;
-            try { await setDoc(publicDocRef, updates, { merge: true }); } catch (e) {}
+            if (!publicDocRef || !auth?.currentUser) return;
+            try { 
+                await setDoc(publicDocRef, updates, { merge: true }); 
+            } catch (e) {
+                document.getElementById('sync-indicator').textContent = "ERREUR SAUVEGARDE";
+            }
         };
 
         const runManaSequence = (btn, callback) => {
@@ -381,6 +386,7 @@
             }
         };
 
+        // --- ASSIGNATION DES BOUTONS ---
         window.handleAction = (event, type) => {
             event.stopPropagation();
             const btn = event.target.closest('.btn-circular');
@@ -393,6 +399,7 @@
                 });
             } else if (type === 'save') {
                 runManaSequence(btn, () => {
+                    // C'EST ICI QU'ON ENCLENCHE LA VRAIE GRAVURE
                     const currentBg = bgLayer.style.backgroundImage.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
                     window.saveData({ 
                         pencilNoteRich: glassTextarea.innerHTML, 
