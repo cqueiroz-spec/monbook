@@ -17,31 +17,28 @@
             touch-action: manipulation;
         }
 
-        /* Loader invisible par défaut pour garantir le visuel sur Vercel */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
             display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease; pointer-events: none; opacity: 0;
+            transition: opacity 0.4s ease;
         }
-        #loader-overlay.active { opacity: 1; pointer-events: auto; display: flex; }
 
         #bg-fixed-layer {
             position: fixed; top: 0; left: 0; width: 100vw; height: var(--fixed-vh); z-index: 1;
-            background-color: #000; background-size: contain; background-position: center center;
+            background-color: #001219; background-size: contain; background-position: center center;
             background-repeat: no-repeat; transition: background-image 0.8s ease-in-out;
             background-image: linear-gradient(180deg, #001219 0%, #002533 100%);
         }
 
         #portrait-container {
             position: relative; width: 100%; max-width: 420px; height: var(--fixed-vh);
-            margin: 0 auto; z-index: 10; background: transparent; cursor: pointer; perspective: 1200px;
+            margin: 0 auto; z-index: 10; background: transparent; perspective: 1200px;
         }
 
         .scrolling-zone {
             position: absolute; left: 0; width: 100%; height: 60px; display: flex;
             align-items: center; overflow: hidden; z-index: 25; pointer-events: none;
-            top: 45%; /* Position 100% respectée */
-            transition: top 0.3s ease;
+            top: 45%; transition: top 0.3s ease;
         }
 
         #texte-coulissant {
@@ -130,15 +127,35 @@
             text-align: center; overflow-y: auto; padding: 75px 15px 45px 15px; 
             text-shadow: 0 2px 10px rgba(0,0,0,0.7); display: block;
         }
-        
-        #glass-textarea img { 
-            width: 96%; max-width: 100%; height: auto; border-radius: 12px; 
-            margin: 15px auto; display: block; transition: width 0.2s ease;
-            cursor: pointer;
+
+        /* --- Pétales Fleur 100% --- */
+        .glass-note-size-toggle {
+            position: absolute; top: 30px; left: 30px; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 3100; pointer-events: auto;
+            transform: translate(-50%, -50%);
         }
-        #glass-textarea img.selected-img {
-            outline: 3px solid rgba(255,255,255,0.9); box-shadow: 0 0 25px rgba(255,255,255,0.6);
+        .size-dot { width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 15px white; }
+        .size-menu-ring {
+            position: absolute; top: 30px; left: 30px; width: 0; height: 0;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none; z-index: 3090; transform: translate(-50%, -50%);
+            overflow: visible;
         }
+        .btn-size-action {
+            position: absolute; width: 34px; height: 34px; border-radius: 50%;
+            background: rgba(255,255,255,0.35); backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center;
+            color: white; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            font-size: 14px; top: 50%; left: 50%; margin-top: -17px; margin-left: -17px;
+        }
+        .size-menu-ring.active .btn-size-action { opacity: 1; pointer-events: auto; }
+        .size-menu-ring.active .btn-1 { transform: rotate(0deg) translate(40px) rotate(0deg); }
+        .size-menu-ring.active .btn-2 { transform: rotate(72deg) translate(40px) rotate(-72deg); }
+        .size-menu-ring.active .btn-3 { transform: rotate(144deg) translate(40px) rotate(-144deg); }
+        .size-menu-ring.active .btn-4 { transform: rotate(216deg) translate(40px) rotate(-216deg); }
+        .size-menu-ring.active .btn-5 { transform: rotate(288deg) translate(40px) rotate(-288deg); }
 
         /* --- BULLE BD 100% --- */
         #image-bubble {
@@ -153,65 +170,16 @@
             outline: none; border: 2px solid #fff;
         }
         #image-bubble.active { opacity: 1; transform: scale(1) translateY(0) translateX(-50%); }
-        #image-bubble::after {
-            content: ''; position: absolute; bottom: -10px; left: 50%; 
-            transform: translateX(-50%); border-left: 10px solid transparent;
-            border-right: 10px solid transparent; border-top: 12px solid #fff;
-        }
-
-        /* --- Système Fleur 100% --- */
-        .glass-note-size-toggle {
-            position: absolute; top: 30px; left: 30px; width: 44px; height: 44px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 3100; pointer-events: auto;
-            transform: translate(-50%, -50%);
-        }
-        .size-dot { width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 15px white; }
-        
-        .size-menu-ring {
-            position: absolute; top: 30px; left: 30px; width: 0; height: 0;
-            display: flex; align-items: center; justify-content: center;
-            pointer-events: none; z-index: 3090; transform: translate(-50%, -50%);
-            overflow: visible;
-        }
-        .btn-size-action {
-            position: absolute; width: 34px; height: 34px; border-radius: 50%;
-            background: rgba(255,255,255,0.35); backdrop-filter: blur(10px);
-            border: 1.5px solid rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center;
-            color: white; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            font-size: 14px; top: 50%; left: 50%; margin-top: -17px; margin-left: -17px;
-            user-select: none;
-        }
-        .size-menu-ring.active .btn-size-action { opacity: 1; pointer-events: auto; }
-        .size-menu-ring.active .btn-1 { transform: rotate(0deg) translate(40px) rotate(0deg); }
-        .size-menu-ring.active .btn-2 { transform: rotate(72deg) translate(40px) rotate(-72deg); }
-        .size-menu-ring.active .btn-3 { transform: rotate(144deg) translate(40px) rotate(-144deg); }
-        .size-menu-ring.active .btn-4 { transform: rotate(216deg) translate(40px) rotate(-216deg); }
-        .size-menu-ring.active .btn-5 { transform: rotate(288deg) translate(40px) rotate(-288deg); }
-
-        .btn-size-action:active { background: white; color: black; transform: scale(0.85) !important; }
-
-        .glass-note-done-wrapper {
-            position: absolute; top: 30px; right: 30px; width: 44px; height: 44px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 3100; pointer-events: auto;
-            transform: translate(50%, -50%);
-        }
-        .glass-note-done-dot { width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 10px white; }
 
         #sync-indicator {
             position: absolute; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
             font-size: 8px; text-transform: uppercase; letter-spacing: 4px; color: rgba(255, 255, 255, 0.4); pointer-events: none;
         }
-        .glass-input {
-            width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 12px; padding: 10px; color: white; outline: none; resize: none;
-        }
     </style>
 </head>
-<body onclick="handleGlobalClick(event)">
+<body id="main-body" onclick="handleGlobalClick(event)">
 
+    <!-- LOADER SÉCURISÉ -->
     <div id="loader-overlay">
         <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
@@ -221,24 +189,24 @@
     <div id="portrait-container">
         <audio id="audio-player" loop></audio>
 
-        <!-- Modal Note -->
+        <!-- Note Modal -->
         <div id="glass-note-modal">
             <div class="glass-note-content" onclick="event.stopPropagation()">
                 <div id="image-bubble" contenteditable="true" onclick="event.stopPropagation()"></div>
 
-                <div class="glass-note-size-toggle" onpointerdown="event.preventDefault(); toggleSizeMenu(event);">
+                <div class="glass-note-size-toggle" onclick="toggleSizeMenu(event)">
                     <div id="size-toggle-dot" class="size-dot"></div>
                 </div>
                 <div id="size-menu" class="size-menu-ring">
-                    <div class="btn-size-action btn-1" onpointerdown="event.preventDefault(); handleSelectionAction('big');">A</div>
-                    <div class="btn-size-action btn-2" onpointerdown="event.preventDefault();"></div>
-                    <div class="btn-size-action btn-3" onpointerdown="event.preventDefault(); handleSelectionAction('font');">Aa</div>
-                    <div class="btn-size-action btn-4" onpointerdown="event.preventDefault();"></div>
-                    <div class="btn-size-action btn-5" onpointerdown="event.preventDefault(); handleSelectionAction('normal');">a</div>
+                    <div class="btn-size-action btn-1" onclick="handleSelectionAction('big')">A</div>
+                    <div class="btn-size-action btn-2" onclick="event.stopPropagation()"></div>
+                    <div class="btn-size-action btn-3" onclick="handleSelectionAction('font')">Aa</div>
+                    <div class="btn-size-action btn-4" onclick="event.stopPropagation()"></div>
+                    <div class="btn-size-action btn-5" onclick="handleSelectionAction('normal')">a</div>
                 </div>
 
-                <div class="glass-note-done-wrapper" onpointerdown="event.preventDefault();" onclick="closeGlassNote(event)">
-                    <div id="save-dot" class="glass-note-done-dot"></div>
+                <div class="absolute top-8 right-8 cursor-pointer" onclick="closeGlassNote(event)">
+                    <div class="w-2.5 h-2.5 bg-white/40 rounded-full border border-white"></div>
                 </div>
 
                 <div id="glass-textarea" contenteditable="true" placeholder="Note..."></div>
@@ -285,7 +253,7 @@
         </div>
 
         <div id="bottom-panel" onclick="event.stopPropagation()">
-            <textarea id="input-note" rows="1" class="glass-input" placeholder="Message..."></textarea>
+            <textarea id="input-note" rows="1" class="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-white outline-none" placeholder="Message..."></textarea>
             <div class="w-full py-4 opacity-50">
                 <input type="range" id="vitesse-range" min="0" max="80" value="20" class="w-full h-1 bg-white/10 appearance-none rounded-full accent-white">
             </div>
@@ -303,7 +271,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // iPad / Vercel fix
         const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
         window.addEventListener('load', lockLayout);
 
@@ -312,17 +279,17 @@
         const app = initializeApp(config);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-v4-real-sync';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-book-final';
         const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
 
-        const loaderOverlay = document.getElementById('loader-overlay');
-        function hideLoader() {
-            loaderOverlay.style.opacity = '0';
-            setTimeout(() => { loaderOverlay.classList.remove('active'); loaderOverlay.style.display = 'none'; }, 500);
-        }
-
-        // FORCE LA VUE IMMÉDIATE (Plus d'écran noir sur Vercel)
-        setTimeout(hideLoader, 200); 
+        const loader = document.getElementById('loader-overlay');
+        const hideLoader = () => {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.remove(), 400); // Suppression physique du loader pour débloquer les clics
+        };
+        
+        // DEBLOCAGE VISUEL IMMEDIAT (Anti-écran noir Vercel)
+        setTimeout(hideLoader, 200);
 
         const init = async () => {
             try {
@@ -330,9 +297,8 @@
                 onSnapshot(publicDocRef, snap => {
                     if (snap.exists()) applyData(snap.data());
                     document.getElementById('sync-indicator').textContent = "GRAVURE ACTIVE";
-                    document.getElementById('sync-indicator').style.color = "#4ade80";
-                }, err => { console.log("Cloud waiting keys..."); });
-            } catch(e) {}
+                }, err => { console.log("Waiting keys..."); });
+            } catch(e) { console.log("Offline mode"); }
         };
         init();
 
@@ -405,7 +371,6 @@
                 });
             } else if (type === 'save') {
                 runManaSequence(btn, () => {
-                    // FORCE LA GRAVURE DANS LE CLOUD
                     window.saveData({ 
                         pencilNoteRich: glassTextarea.innerHTML, 
                         text: inputNote.value,
@@ -443,8 +408,7 @@
         window.handleSelectionAction = (action) => {
             glassTextarea.focus();
             if (activeImage) {
-                if (action === 'big') activeImage.style.width = "100%";
-                else if (action === 'normal') activeImage.style.width = "96%";
+                activeImage.style.width = (action === 'big') ? "100%" : "96%";
             } else {
                 const sel = window.getSelection();
                 if (sel.rangeCount > 0 && !sel.isCollapsed) {
@@ -470,6 +434,7 @@
             if (e) e.stopPropagation();
             sizeMenu.classList.remove('active');
             imageBubble.classList.remove('active');
+            window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
             glassModal.classList.remove('active');
             setTimeout(() => { glassModal.style.display = 'none'; }, 300);
         };
