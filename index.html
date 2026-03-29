@@ -156,11 +156,11 @@
         #image-bubble::after {
             content: ''; position: absolute; bottom: -10px; left: 50%; 
             transform: translateX(-50%); border-left: 10px solid transparent;
-            border-right: 10px solid transparent; border-top: 12px solid rgba(255, 255, 255, 0.92);
+            border-right: 10px solid transparent; border-top: 12px solid #fff;
         }
         #image-bubble:empty::before { content: 'Écrire...'; opacity: 0.4; }
 
-        /* --- Système Fleur (Haut Note) --- */
+        /* --- Système Fleur (Pétales 100%) --- */
         .glass-note-size-toggle {
             position: absolute; top: 30px; left: 30px; width: 44px; height: 44px;
             display: flex; align-items: center; justify-content: center;
@@ -183,11 +183,10 @@
             color: white; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             font-size: 14px; top: 50%; left: 50%; margin-top: -17px; margin-left: -17px;
-            user-select: none; -webkit-user-select: none;
+            user-select: none;
         }
         .size-menu-ring.active .btn-size-action { opacity: 1; pointer-events: auto; }
         
-        /* Pétales Fleur */
         .size-menu-ring.active .btn-1 { transform: rotate(0deg) translate(40px) rotate(0deg); }
         .size-menu-ring.active .btn-2 { transform: rotate(72deg) translate(40px) rotate(-72deg); }
         .size-menu-ring.active .btn-3 { transform: rotate(144deg) translate(40px) rotate(-144deg); }
@@ -234,10 +233,8 @@
     <div id="portrait-container">
         <audio id="audio-player" loop></audio>
 
-        <!-- Modal Note -->
         <div id="glass-note-modal">
             <div class="glass-note-content" onclick="event.stopPropagation()">
-                <!-- Bulle de BD Éditable -->
                 <div id="image-bubble" contenteditable="true" onclick="event.stopPropagation()"></div>
 
                 <div class="glass-note-size-toggle" onpointerdown="event.preventDefault(); toggleSizeMenu(event);">
@@ -247,9 +244,7 @@
                 <div id="size-menu" class="size-menu-ring">
                     <div class="btn-size-action btn-1" onpointerdown="event.preventDefault(); handleSelectionAction('big');">A</div>
                     <div class="btn-size-action btn-2" onpointerdown="event.preventDefault();"></div>
-                    <div class="btn-size-action btn-3" onpointerdown="event.preventDefault(); handleSelectionAction('font');">
-                        <span style="font-size: 11px;">Aa</span>
-                    </div>
+                    <div class="btn-size-action btn-3" onpointerdown="event.preventDefault(); handleSelectionAction('font');">Aa</div>
                     <div class="btn-size-action btn-4" onpointerdown="event.preventDefault();"></div>
                     <div class="btn-size-action btn-5" onpointerdown="event.preventDefault(); handleSelectionAction('normal');">a</div>
                 </div>
@@ -317,29 +312,52 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const lockLayout = () => {
-            const h = window.innerHeight;
-            document.documentElement.style.setProperty('--fixed-vh', `${h}px`);
-        };
+        const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
         window.addEventListener('load', lockLayout);
 
-        // --- CONFIGURATION CLOUD PERMANENTE ---
-        // Remplace par tes clés Firebase ici pour que ça grave définitivement sur GitHub/Vercel
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: ""
+        // --- CONFIG FIREBASE PERSO (REMPLIR POUR SAUVEGARDE GITHUB/VERCEL) ---
+        const config = {
+            apiKey: "",
+            authDomain: "",
+            projectId: "",
+            storageBucket: "",
+            messagingSenderId: "",
+            appId: ""
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'book-4-shared-v4';
-        const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
-
+        const configStr = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : config;
+        let db, auth, publicDocRef;
         let isFirstLoad = true;
-        const syncIndicator = document.getElementById('sync-indicator');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'book-4-shared-v4';
+
         const loaderOverlay = document.getElementById('loader-overlay');
+        function hideLoader() {
+            isFirstLoad = false;
+            loaderOverlay.style.opacity = '0';
+            setTimeout(() => loaderOverlay.remove(), 500);
+        }
+
+        // Sécurité Vercel/GitHub : Si pas de config, on affiche l'app après 1s
+        setTimeout(() => { if(isFirstLoad) hideLoader(); }, 1500);
+
+        if (configStr.apiKey) {
+            const app = initializeApp(configStr);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+            
+            const initAuth = async () => {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else { await signInAnonymously(auth); }
+            };
+            initAuth();
+            onAuthStateChanged(auth, user => { if (user) startSync(); });
+        }
+
+        const syncIndicator = document.getElementById('sync-indicator');
         const glassTextarea = document.getElementById('glass-textarea');
         const glassModal = document.getElementById('glass-note-modal');
         const circWrapper = document.getElementById('circular-menu-wrapper');
@@ -356,36 +374,13 @@
         let noteFontIdx = 0;
         const fontsRaw = ["Inter", "Playfair Display", "JetBrains Mono", "Dancing Script", "Montserrat"];
 
-        function hideLoader() {
-            isFirstLoad = false;
-            loaderOverlay.style.opacity = '0';
-            setTimeout(() => loaderOverlay.remove(), 500);
-        }
-
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else { await signInAnonymously(auth); }
-            } catch (error) {
-                if(isFirstLoad) hideLoader();
-                syncIndicator.textContent = "MODE LOCAL";
-            }
-        };
-
-        initAuth();
-        onAuthStateChanged(auth, user => { if (user) startSync(); });
-
-        const startSync = async () => {
-            if (!publicDocRef) return;
+        const startSync = () => {
             onSnapshot(publicDocRef, snap => {
                 if (snap.exists()) applyData(snap.data());
                 if (isFirstLoad) hideLoader();
                 syncIndicator.textContent = "GRAVÉ DANS LE CLOUD";
                 syncIndicator.style.color = "#4ade80";
-            }, err => {
-                if(isFirstLoad) hideLoader();
-            });
+            }, err => { if(isFirstLoad) hideLoader(); });
         };
 
         function applyData(data) {
@@ -408,7 +403,7 @@
             try { await setDoc(publicDocRef, updates, { merge: true }); } catch (e) {}
         };
 
-        // --- MANA SEQUENCE 100% ---
+        // --- MANA ANIMATION 100% ---
         const runManaSequence = (btn, callback) => {
             circWrapper.classList.add('converging');
             btn.classList.add('selected');
@@ -503,7 +498,6 @@
                             }
                         }
                     });
-                    sel.removeAllRanges(); sel.addRange(range);
                 }
             }
             triggerSave();
@@ -525,14 +519,11 @@
         glassTextarea.addEventListener('click', (e) => {
             const prev = glassTextarea.querySelector('.selected-img');
             if (prev) prev.classList.remove('selected-img');
-            
             if (e.target.tagName === 'IMG') {
                 e.stopPropagation();
                 activeImage = e.target;
                 activeImage.classList.add('selected-img');
-                const savedText = activeImage.getAttribute('data-bubble-text') || "";
-                imageBubble.innerText = savedText;
-
+                imageBubble.innerText = activeImage.getAttribute('data-bubble-text') || "";
                 const imgRect = activeImage.getBoundingClientRect();
                 const containerRect = glassModal.getBoundingClientRect();
                 imageBubble.style.top = (imgRect.top - containerRect.top - 60) + "px";
@@ -545,10 +536,7 @@
         });
 
         imageBubble.addEventListener('input', () => {
-            if (activeImage) {
-                activeImage.setAttribute('data-bubble-text', imageBubble.innerText);
-                triggerSave();
-            }
+            if (activeImage) { activeImage.setAttribute('data-bubble-text', imageBubble.innerText); triggerSave(); }
         });
 
         window.processFile = (event, mode) => {
@@ -566,7 +554,7 @@
                         const scale = Math.min(1, (mode === 'bg' ? 1080 : 500) / Math.max(img.width, img.height));
                         canvas.width = img.width * scale; canvas.height = img.height * scale;
                         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.4);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
                         if (mode === 'bg') {
                             bgLayer.style.backgroundImage = `url('${dataUrl}')`;
                             window.saveData({ bg: dataUrl });
