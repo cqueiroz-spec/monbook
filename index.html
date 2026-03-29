@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Book 4</title>
+    <title>Mana</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;900&family=Playfair+Display:ital,wght@1,900&family=JetBrains+Mono:wght@800&family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,900;1,900&display=swap');
@@ -48,7 +48,7 @@
             color: #ffffff; will-change: transform;
         }
 
-        /* --- Menu Principal & Animations Mana --- */
+        /* --- Menu Principal & Animations Mana 100% --- */
         #circular-menu-wrapper {
             position: absolute; top: 32%; left: 50%; width: 140px; height: 140px;
             z-index: 100; pointer-events: none; display: flex; align-items: center;
@@ -156,7 +156,7 @@
         #image-bubble::after {
             content: ''; position: absolute; bottom: -10px; left: 50%; 
             transform: translateX(-50%); border-left: 10px solid transparent;
-            border-right: 10px solid transparent; border-top: 12px solid #fff;
+            border-right: 10px solid transparent; border-top: 12px solid rgba(255, 255, 255, 0.92);
         }
         #image-bubble:empty::before { content: 'Écrire...'; opacity: 0.4; }
 
@@ -317,36 +317,27 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
+        const lockLayout = () => {
+            const h = window.innerHeight;
+            document.documentElement.style.setProperty('--fixed-vh', `${h}px`);
+        };
         window.addEventListener('load', lockLayout);
 
-        // --- Configuration Dynamique (GitHub / Vercel compatible) ---
-        const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-        let db, auth, publicDocRef;
+        // --- CONFIGURATION CLOUD PERMANENTE ---
+        // Remplace par tes clés Firebase ici pour que ça grave définitivement sur GitHub/Vercel
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: ""
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'book-4-shared-v4';
+        const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+
         let isFirstLoad = true;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'book-4-shared-repo';
-
-        if (configStr) {
-            const firebaseConfig = JSON.parse(configStr);
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
-            
-            const initAuth = async () => {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else { await signInAnonymously(auth); }
-            };
-            initAuth();
-            onAuthStateChanged(auth, user => { if (user) startSync(); });
-        } else {
-            // Fallback pour GitHub Pages sans config
-            setTimeout(() => { if(isFirstLoad) hideLoader(); }, 1500);
-        }
-
         const syncIndicator = document.getElementById('sync-indicator');
         const loaderOverlay = document.getElementById('loader-overlay');
         const glassTextarea = document.getElementById('glass-textarea');
@@ -371,13 +362,30 @@
             setTimeout(() => loaderOverlay.remove(), 500);
         }
 
-        const startSync = () => {
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else { await signInAnonymously(auth); }
+            } catch (error) {
+                if(isFirstLoad) hideLoader();
+                syncIndicator.textContent = "MODE LOCAL";
+            }
+        };
+
+        initAuth();
+        onAuthStateChanged(auth, user => { if (user) startSync(); });
+
+        const startSync = async () => {
+            if (!publicDocRef) return;
             onSnapshot(publicDocRef, snap => {
                 if (snap.exists()) applyData(snap.data());
                 if (isFirstLoad) hideLoader();
                 syncIndicator.textContent = "GRAVÉ DANS LE CLOUD";
                 syncIndicator.style.color = "#4ade80";
-            }, err => { if(isFirstLoad) hideLoader(); });
+            }, err => {
+                if(isFirstLoad) hideLoader();
+            });
         };
 
         function applyData(data) {
@@ -476,7 +484,8 @@
         window.handleSelectionAction = (action) => {
             glassTextarea.focus();
             if (activeImage) {
-                activeImage.style.width = (action === 'big') ? "100%" : "96%";
+                if (action === 'big') activeImage.style.width = "100%";
+                else if (action === 'normal') activeImage.style.width = "96%";
             } else {
                 const sel = window.getSelection();
                 if (sel.rangeCount > 0 && !sel.isCollapsed) {
@@ -494,6 +503,7 @@
                             }
                         }
                     });
+                    sel.removeAllRanges(); sel.addRange(range);
                 }
             }
             triggerSave();
@@ -503,6 +513,8 @@
             if (e) e.stopPropagation();
             sizeMenu.classList.remove('active');
             imageBubble.classList.remove('active');
+            const selImg = glassTextarea.querySelector('.selected-img');
+            if (selImg) selImg.classList.remove('selected-img');
             window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
             glassModal.classList.remove('active');
             setTimeout(() => { glassModal.style.display = 'none'; }, 300);
@@ -513,11 +525,14 @@
         glassTextarea.addEventListener('click', (e) => {
             const prev = glassTextarea.querySelector('.selected-img');
             if (prev) prev.classList.remove('selected-img');
+            
             if (e.target.tagName === 'IMG') {
                 e.stopPropagation();
                 activeImage = e.target;
                 activeImage.classList.add('selected-img');
-                imageBubble.innerText = activeImage.getAttribute('data-bubble-text') || "";
+                const savedText = activeImage.getAttribute('data-bubble-text') || "";
+                imageBubble.innerText = savedText;
+
                 const imgRect = activeImage.getBoundingClientRect();
                 const containerRect = glassModal.getBoundingClientRect();
                 imageBubble.style.top = (imgRect.top - containerRect.top - 60) + "px";
@@ -530,7 +545,10 @@
         });
 
         imageBubble.addEventListener('input', () => {
-            if (activeImage) { activeImage.setAttribute('data-bubble-text', imageBubble.innerText); triggerSave(); }
+            if (activeImage) {
+                activeImage.setAttribute('data-bubble-text', imageBubble.innerText);
+                triggerSave();
+            }
         });
 
         window.processFile = (event, mode) => {
@@ -539,6 +557,7 @@
             const reader = new FileReader();
             reader.onload = e => {
                 if (mode === 'audio') {
+                    if (audioPlayer.src) URL.revokeObjectURL(audioPlayer.src);
                     audioPlayer.src = URL.createObjectURL(file); audioPlayer.play();
                 } else {
                     const img = new Image();
@@ -547,7 +566,7 @@
                         const scale = Math.min(1, (mode === 'bg' ? 1080 : 500) / Math.max(img.width, img.height));
                         canvas.width = img.width * scale; canvas.height = img.height * scale;
                         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.4);
                         if (mode === 'bg') {
                             bgLayer.style.backgroundImage = `url('${dataUrl}')`;
                             window.saveData({ bg: dataUrl });
