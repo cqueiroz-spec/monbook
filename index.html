@@ -19,8 +19,8 @@
 
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.6s ease; pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease; pointer-events: none;
         }
         #loader-overlay.active { pointer-events: auto; }
 
@@ -36,18 +36,19 @@
             margin: 0 auto; z-index: 10; background: transparent; cursor: pointer; perspective: 1200px;
         }
 
-        /* --- Animations Mana (Réglage 100%) --- */
-        @keyframes crystalShimmer { 
-            0% { filter: brightness(1) blur(0px); box-shadow: 0 0 10px white; } 
-            100% { filter: brightness(1.8) blur(1px); box-shadow: 0 0 60px rgba(255,255,255,0.4); } 
+        .scrolling-zone {
+            position: absolute; left: 0; width: 100%; height: 60px; display: flex;
+            align-items: center; overflow: hidden; z-index: 25; pointer-events: none;
+            top: 45%; transition: top 0.3s ease;
         }
 
-        @keyframes spinRing { 
-            0% { transform: rotateZ(-720deg); } 
-            100% { transform: rotateZ(0deg); } 
+        #texte-coulissant {
+            white-space: nowrap; position: absolute; font-size: 2.2rem; font-weight: 900;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.6); letter-spacing: -0.02em;
+            color: #ffffff; will-change: transform;
         }
 
-        /* --- Menu Principal --- */
+        /* --- Menu Principal & Animations Mana --- */
         #circular-menu-wrapper {
             position: absolute; top: 32%; left: 50%; width: 140px; height: 140px;
             z-index: 100; pointer-events: none; display: flex; align-items: center;
@@ -57,9 +58,10 @@
         }
         #circular-menu-wrapper.ui-visible { opacity: 1; transform: translate(-50%, -50%) rotateX(45deg) scale(1); visibility: visible; }
         #menu-ring { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
-        .spin-animation { animation: spinRing 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        /* Convergence Mana */
+        .spin-animation { animation: spinRing 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes spinRing { 0% { transform: rotateZ(-720deg); } 100% { transform: rotateZ(0deg); } }
+        
         #circular-menu-wrapper.converging .btn-circular { transition: all 0.7s cubic-bezier(0.5, 0, 0.5, 1) !important; }
         #circular-menu-wrapper.converging .btn-circular:not(.selected) {
             top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotateX(-45deg) scale(0) !important;
@@ -71,6 +73,8 @@
             background: rgba(255, 255, 255, 0.6); box-shadow: 0 0 40px white, inset 0 0 10px white; z-index: 250;
         }
         #circular-menu-wrapper.mana-final .btn-circular.selected { transform: translate(-50%, -50%) rotateX(-45deg) scale(0) !important; opacity: 0 !important; transition: all 0.4s ease-in !important; }
+        
+        @keyframes crystalShimmer { 0% { filter: brightness(1) blur(0px); box-shadow: 0 0 10px white; } 100% { filter: brightness(1.8) blur(1px); box-shadow: 0 0 60px rgba(255,255,255,0.4); } }
 
         .btn-circular {
             position: absolute; width: 22px; height: 22px; border-radius: 50%;
@@ -79,7 +83,7 @@
             align-items: center; justify-content: center; color: white;
             pointer-events: auto; transform: translate(-50%, -50%) rotateX(-45deg);
             box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-            transition: top 0.4s ease, left 0.4s ease, transform 0.4s ease;
+            transition: top 0.4s ease, left 0.4s ease, transform 0.4s ease, background 0.2s;
             z-index: 5; cursor: pointer;
         }
         .btn-circular:nth-child(1) { top: 0%; left: 50%; }
@@ -91,10 +95,20 @@
         .btn-circular:nth-child(7) { top: 50%; left: 0%; }
         .btn-circular:nth-child(8) { top: 14.6%; left: 14.6%; }
 
-        /* --- Zone Note --- */
+        #bottom-panel {
+            position: absolute; bottom: 0; width: 100%; padding: 20px 25px calc(20px + env(safe-area-inset-bottom)) 25px;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+            z-index: 50; transition: all 0.4s ease; opacity: 0;
+            transform: translateY(20px); pointer-events: auto;
+        }
+        #bottom-panel.ui-visible { opacity: 1; transform: translateY(0); }
+
+        /* --- Zone Note & Fenêtre --- */
         #glass-note-modal {
             position: absolute; top: 15%; bottom: 35%; 
-            left: 50%; width: 90%; max-width: 56vh;
+            left: 50%; 
+            width: 90%; 
+            max-width: 56vh;
             transform: translateX(-50%);
             z-index: 3000; display: none; align-items: center; justify-content: center;
             pointer-events: none; border-radius: 32px; overflow: visible;
@@ -116,33 +130,20 @@
             text-align: center; overflow-y: auto; padding: 75px 15px 45px 15px; 
             text-shadow: 0 2px 10px rgba(0,0,0,0.7); display: block;
         }
-
-        /* Menu Fleur 100% (5 pétales) */
-        .size-menu-ring {
-            position: absolute; top: 30px; left: 30px; width: 0; height: 0;
-            display: flex; align-items: center; justify-content: center;
-            pointer-events: none; z-index: 3090; transform: translate(-50%, -50%);
-            overflow: visible;
+        
+        #glass-textarea img { 
+            width: 96%; max-width: 100%; height: auto; border-radius: 12px; 
+            margin: 15px auto; display: block; transition: width 0.2s ease;
+            cursor: pointer;
         }
-        .btn-size-action {
-            position: absolute; width: 34px; height: 34px; border-radius: 50%;
-            background: rgba(255,255,255,0.35); backdrop-filter: blur(10px);
-            border: 1.5px solid rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center;
-            color: white; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            font-size: 14px; top: 50%; left: 50%; margin-top: -17px; margin-left: -17px;
+        #glass-textarea img.selected-img {
+            outline: 3px solid rgba(255,255,255,0.9); box-shadow: 0 0 25px rgba(255,255,255,0.6);
         }
-        .size-menu-ring.active .btn-size-action { opacity: 1; pointer-events: auto; }
-        .size-menu-ring.active .btn-1 { transform: rotate(0deg) translate(40px) rotate(0deg); }
-        .size-menu-ring.active .btn-2 { transform: rotate(72deg) translate(40px) rotate(-72deg); }
-        .size-menu-ring.active .btn-3 { transform: rotate(144deg) translate(40px) rotate(-144deg); }
-        .size-menu-ring.active .btn-4 { transform: rotate(216deg) translate(40px) rotate(-216deg); }
-        .size-menu-ring.active .btn-5 { transform: rotate(288deg) translate(40px) rotate(-288deg); }
 
-        /* Bulle BD */
+        /* --- BULLE DE BD ÉDITABLE --- */
         #image-bubble {
             position: absolute; min-width: 80px; max-width: 180px; padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(10px);
             border-radius: 24px; color: #1a1a1a; font-weight: 800; font-size: 14px;
             z-index: 4000; pointer-events: auto; opacity: 0;
             transform: scale(0.6) translateY(20px);
@@ -153,28 +154,73 @@
         }
         #image-bubble.active { opacity: 1; transform: scale(1) translateY(0) translateX(-50%); }
         #image-bubble::after {
-            content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
-            border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 12px solid #fff;
+            content: ''; position: absolute; bottom: -10px; left: 50%; 
+            transform: translateX(-50%); border-left: 10px solid transparent;
+            border-right: 10px solid transparent; border-top: 12px solid #fff;
+        }
+        #image-bubble:empty::before { content: 'Écrire...'; opacity: 0.4; }
+
+        /* --- Système Fleur (Haut Note) --- */
+        .glass-note-size-toggle {
+            position: absolute; top: 30px; left: 30px; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 3100; pointer-events: auto;
+            transform: translate(-50%, -50%);
+        }
+        .size-dot { width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 15px white; }
+        
+        .size-menu-ring {
+            position: absolute; top: 30px; left: 30px; width: 0; height: 0;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none; z-index: 3090; transform: translate(-50%, -50%);
+            overflow: visible;
+        }
+        
+        .btn-size-action {
+            position: absolute; width: 34px; height: 34px; border-radius: 50%;
+            background: rgba(255,255,255,0.35); backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center;
+            color: white; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            font-size: 14px; top: 50%; left: 50%; margin-top: -17px; margin-left: -17px;
+            user-select: none; -webkit-user-select: none;
+        }
+        .size-menu-ring.active .btn-size-action { opacity: 1; pointer-events: auto; }
+        
+        /* Pétales Fleur */
+        .size-menu-ring.active .btn-1 { transform: rotate(0deg) translate(40px) rotate(0deg); }
+        .size-menu-ring.active .btn-2 { transform: rotate(72deg) translate(40px) rotate(-72deg); }
+        .size-menu-ring.active .btn-3 { transform: rotate(144deg) translate(40px) rotate(-144deg); }
+        .size-menu-ring.active .btn-4 { transform: rotate(216deg) translate(40px) rotate(-216deg); }
+        .size-menu-ring.active .btn-5 { transform: rotate(288deg) translate(40px) rotate(-288deg); }
+
+        .btn-size-action:active { background: white; color: black; transform: scale(0.85) !important; }
+
+        /* Point Droit */
+        .glass-note-done-wrapper {
+            position: absolute; top: 30px; right: 30px; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 3100; pointer-events: auto;
+            transform: translate(50%, -50%);
+        }
+        .glass-note-done-dot { width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 10px white; }
+
+        .btn-add-img-note {
+            width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, 0.2);
+            display: flex; align-items: center; justify-content: center; cursor: pointer; color: white;
+            position: absolute; bottom: 15px; left: 15px; z-index: 10;
         }
 
-        #texte-coulissant {
-            white-space: nowrap; position: absolute; font-size: 2.2rem; font-weight: 900;
-            text-shadow: 0 0 20px rgba(0, 0, 0, 0.6); letter-spacing: -0.02em;
-            color: #ffffff; will-change: transform;
+        #sync-indicator {
+            position: absolute; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+            font-size: 8px; text-transform: uppercase; letter-spacing: 4px; color: rgba(255, 255, 255, 0.4); pointer-events: none;
         }
-        #bottom-panel {
-            position: absolute; bottom: 0; width: 100%; padding: 20px 25px calc(20px + env(safe-area-inset-bottom)) 25px;
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
-            z-index: 50; transition: all 0.4s ease; opacity: 0;
-            transform: translateY(20px); pointer-events: auto;
+        .hidden-input { position: fixed; top: -100px; left: -100px; width: 1px; height: 1px; opacity: 0; }
+        
+        .glass-input {
+            width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px; padding: 10px; color: white; outline: none; resize: none;
         }
-        #bottom-panel.ui-visible { opacity: 1; transform: translateY(0); }
-
-        #custom-confirm {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 20000;
-            display: none; align-items: center; justify-content: center; backdrop-filter: blur(12px);
-        }
-        #custom-confirm.active { display: flex; }
     </style>
 </head>
 <body onclick="handleGlobalClick(event)">
@@ -188,30 +234,34 @@
     <div id="portrait-container">
         <audio id="audio-player" loop></audio>
 
+        <!-- Modal Note -->
         <div id="glass-note-modal">
             <div class="glass-note-content" onclick="event.stopPropagation()">
+                <!-- Bulle de BD Éditable -->
                 <div id="image-bubble" contenteditable="true" onclick="event.stopPropagation()"></div>
 
-                <div class="absolute top-8 left-8 z-[3100] cursor-pointer" onclick="toggleSizeMenu(event)">
-                    <div id="size-toggle-dot" class="w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_15px_white] transition-transform"></div>
+                <div class="glass-note-size-toggle" onpointerdown="event.preventDefault(); toggleSizeMenu(event);">
+                    <div id="size-toggle-dot" class="size-dot"></div>
                 </div>
                 
                 <div id="size-menu" class="size-menu-ring">
-                    <div class="btn-size-action btn-1" onclick="handleSelectionAction(event, 'big')">A</div>
-                    <div class="btn-size-action btn-2" onclick="event.stopPropagation()"></div>
-                    <div class="btn-size-action btn-3" onclick="handleSelectionAction(event, 'font')">Aa</div>
-                    <div class="btn-size-action btn-4" onclick="event.stopPropagation()"></div>
-                    <div class="btn-size-action btn-5" onclick="handleSelectionAction(event, 'normal')">a</div>
+                    <div class="btn-size-action btn-1" onpointerdown="event.preventDefault(); handleSelectionAction('big');">A</div>
+                    <div class="btn-size-action btn-2" onpointerdown="event.preventDefault();"></div>
+                    <div class="btn-size-action btn-3" onpointerdown="event.preventDefault(); handleSelectionAction('font');">
+                        <span style="font-size: 11px;">Aa</span>
+                    </div>
+                    <div class="btn-size-action btn-4" onpointerdown="event.preventDefault();"></div>
+                    <div class="btn-size-action btn-5" onpointerdown="event.preventDefault(); handleSelectionAction('normal');">a</div>
                 </div>
 
-                <div class="absolute top-8 right-8 z-[3100] cursor-pointer" onclick="closeGlassNote(event)">
-                    <div class="w-2.5 h-2.5 bg-white/40 rounded-full border border-white"></div>
+                <div class="glass-note-done-wrapper" onpointerdown="event.preventDefault();" onclick="closeGlassNote(event)">
+                    <div id="save-dot" class="glass-note-done-dot"></div>
                 </div>
 
                 <div id="glass-textarea" contenteditable="true" placeholder="Note..."></div>
                 
-                <div class="absolute bottom-6 left-6 p-2 bg-white/10 rounded-full cursor-pointer hover:bg-white/20" onclick="event.stopPropagation(); document.getElementById('note-img-upload').click()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3a2 2 0 0 0-3 0l-4 4"/></svg>
+                <div class="btn-add-img-note" onpointerdown="event.preventDefault();" onclick="document.getElementById('note-img-upload').click()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3a2 2 0 0 0-3 0l-4 4"/></svg>
                 </div>
             </div>
         </div>
@@ -224,9 +274,9 @@
                 <div class="btn-circular" title="Livre" onclick="handleAction(event, 'book')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 </div>
-                <div class="btn-circular" title="Couleur" onclick="event.stopPropagation()">
-                    <div id="color-preview" class="w-3 h-3 rounded-full bg-white border border-white"></div>
-                    <input type="color" id="color-picker" value="#ffffff" class="absolute inset-0 opacity-0 cursor-pointer" oninput="handleAction(event, 'color_live')" onchange="handleAction(event, 'color_final')">
+                <div class="btn-circular" title="Couleur">
+                    <div id="color-preview" style="width:12px; height:12px; border-radius:50%; background:white; border:1px solid white;"></div>
+                    <input type="color" id="color-picker" value="#ffffff" class="absolute inset-0 opacity-0 cursor-pointer" onclick="event.stopPropagation();" oninput="handleAction(event, 'color_live')" onchange="handleAction(event, 'color_final')">
                 </div>
                 <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
                     <span style="font-size: 10px; font-weight: 900;">Aa</span>
@@ -247,31 +297,21 @@
         </div>
 
         <div class="scrolling-zone">
-            <span id="texte-coulissant">Bienvenue dans Book 4...</span>
+            <span id="texte-coulissant">Book...</span>
         </div>
 
         <div id="bottom-panel" onclick="event.stopPropagation()">
-            <textarea id="input-note" rows="1" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white outline-none focus:bg-white/10 transition-colors" placeholder="Texte..."></textarea>
-            <div class="w-full py-4">
-                <input type="range" id="vitesse-range" min="0" max="80" value="20" class="w-full h-1 bg-white/10 appearance-none rounded-full accent-white">
+            <textarea id="input-note" rows="1" class="glass-input" placeholder="Message défilant..."></textarea>
+            <div class="w-full py-4 opacity-50">
+                <input type="range" id="vitesse-range" min="0" max="80" value="20" class="w-full h-px bg-white/30 appearance-none outline-none">
             </div>
         </div>
 
-        <div id="sync-indicator">SYSTÈME PRÊT</div>
+        <div id="sync-indicator">CONNECTÉ</div>
 
-        <input type="file" id="bg-upload" style="display:none;" accept="image/*" onchange="processFile(event, 'bg')">
-        <input type="file" id="music-upload" style="display:none;" accept="audio/*" onchange="processFile(event, 'audio')">
-        <input type="file" id="note-img-upload" style="display:none;" accept="image/*" onchange="processFile(event, 'note_img')">
-    </div>
-
-    <div id="custom-confirm">
-        <div class="bg-white/10 backdrop-blur-3xl p-8 rounded-[40px] border border-white/20 text-center max-w-xs w-full mx-4 shadow-2xl">
-            <p class="text-white font-black text-xl mb-8">EFFACER ?</p>
-            <div class="flex gap-4">
-                <button onclick="confirmReset(true)" class="flex-1 py-4 bg-white text-black font-black rounded-2xl">OUI</button>
-                <button onclick="confirmReset(false)" class="flex-1 py-4 bg-white/10 text-white font-bold rounded-2xl">NON</button>
-            </div>
-        </div>
+        <input type="file" id="bg-upload" class="hidden-input" accept="image/*" onchange="processFile(event, 'bg')">
+        <input type="file" id="music-upload" class="hidden-input" accept="audio/*" onchange="processFile(event, 'audio')">
+        <input type="file" id="note-img-upload" class="hidden-input" accept="image/*" onchange="processFile(event, 'note_img')">
     </div>
 
     <script type="module">
@@ -280,10 +320,35 @@
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
-        lockLayout(); window.addEventListener('resize', lockLayout);
+        window.addEventListener('load', lockLayout);
 
-        const loaderOverlay = document.getElementById('loader-overlay');
+        // --- Configuration Dynamique (GitHub / Vercel compatible) ---
+        const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+        let db, auth, publicDocRef;
+        let isFirstLoad = true;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'book-4-shared-repo';
+
+        if (configStr) {
+            const firebaseConfig = JSON.parse(configStr);
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+            
+            const initAuth = async () => {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else { await signInAnonymously(auth); }
+            };
+            initAuth();
+            onAuthStateChanged(auth, user => { if (user) startSync(); });
+        } else {
+            // Fallback pour GitHub Pages sans config
+            setTimeout(() => { if(isFirstLoad) hideLoader(); }, 1500);
+        }
+
         const syncIndicator = document.getElementById('sync-indicator');
+        const loaderOverlay = document.getElementById('loader-overlay');
         const glassTextarea = document.getElementById('glass-textarea');
         const glassModal = document.getElementById('glass-note-modal');
         const circWrapper = document.getElementById('circular-menu-wrapper');
@@ -299,45 +364,20 @@
         let currentFontIdx = 0;
         let noteFontIdx = 0;
         const fontsRaw = ["Inter", "Playfair Display", "JetBrains Mono", "Dancing Script", "Montserrat"];
-        let isCloudEnabled = false;
-        let publicDocRef = null;
-        let authObj = null;
 
-        const hideLoader = () => {
+        function hideLoader() {
+            isFirstLoad = false;
             loaderOverlay.style.opacity = '0';
-            setTimeout(() => { loaderOverlay.classList.remove('active'); loaderOverlay.style.display = 'none'; }, 600);
-        };
-        setTimeout(hideLoader, 1500);
-
-        // Initialisation Cloud
-        try {
-            const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-            if (configStr) {
-                const firebaseConfig = JSON.parse(configStr);
-                const app = initializeApp(firebaseConfig);
-                authObj = getAuth(app);
-                const db = getFirestore(app);
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'book-cloud-shared-v4';
-                publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
-                
-                const initAuth = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(authObj, __initial_auth_token);
-                    } else { await signInAnonymously(authObj); }
-                };
-                initAuth();
-                onAuthStateChanged(authObj, user => { if (user) startSync(); });
-                isCloudEnabled = true;
-            } else { hideLoader(); }
-        } catch (e) { hideLoader(); }
+            setTimeout(() => loaderOverlay.remove(), 500);
+        }
 
         const startSync = () => {
             onSnapshot(publicDocRef, snap => {
                 if (snap.exists()) applyData(snap.data());
-                hideLoader();
-                syncIndicator.textContent = "CLOUD ACTIF";
+                if (isFirstLoad) hideLoader();
+                syncIndicator.textContent = "GRAVÉ DANS LE CLOUD";
                 syncIndicator.style.color = "#4ade80";
-            }, err => { hideLoader(); });
+            }, err => { if(isFirstLoad) hideLoader(); });
         };
 
         function applyData(data) {
@@ -356,11 +396,11 @@
         }
 
         window.saveData = async (updates) => {
-            if (!isCloudEnabled || !publicDocRef || !authObj.currentUser) return;
+            if (!publicDocRef || isFirstLoad || !auth.currentUser) return;
             try { await setDoc(publicDocRef, updates, { merge: true }); } catch (e) {}
         };
 
-        // Mana Sequence Originale
+        // --- MANA SEQUENCE 100% ---
         const runManaSequence = (btn, callback) => {
             circWrapper.classList.add('converging');
             btn.classList.add('selected');
@@ -377,11 +417,6 @@
 
         window.handleGlobalClick = (e) => {
             if (imageBubble.classList.contains('active')) return imageBubble.classList.remove('active');
-            if (sizeMenu.classList.contains('active')) {
-                sizeMenu.classList.remove('active');
-                document.getElementById('size-toggle-dot').style.transform = 'scale(1)';
-                return;
-            }
             if (circWrapper.classList.contains('ui-visible')) {
                 circWrapper.classList.remove('ui-visible');
                 document.getElementById('bottom-panel').classList.remove('ui-visible');
@@ -415,7 +450,12 @@
                     window.saveData({ fontIdx: currentFontIdx });
                 });
             } else if (type === 'reset') {
-                document.getElementById('custom-confirm').classList.add('active');
+                runManaSequence(btn, () => {
+                    if(confirm("Effacer tout ?")) {
+                        window.saveData({ pencilNoteRich: "", text: "", color: "#ffffff", fontIdx: 0, bg: "" });
+                        location.reload();
+                    }
+                });
             } else if (type === 'color_live') {
                 texteCoulissant.style.color = event.target.value;
             } else if (type === 'color_final') {
@@ -423,25 +463,17 @@
                 runManaSequence(btn);
             } else if (type === 'music_toggle') {
                 runManaSequence(btn, () => { if (audioPlayer.src) audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause(); });
-            } else { runManaSequence(btn); }
+            } else if (type === 'book') { runManaSequence(btn); }
         };
 
-        window.confirmReset = (confirm) => {
-            document.getElementById('custom-confirm').classList.remove('active');
-            if (confirm) {
-                if (isCloudEnabled) window.saveData({ pencilNoteRich: "", text: "", color: "#ffffff", fontIdx: 0, bg: "" });
-                location.reload();
-            }
-        };
-
+        // --- FONCTIONS PÉTALES 100% ---
         window.toggleSizeMenu = (e) => {
             e.stopPropagation();
             const active = sizeMenu.classList.toggle('active');
-            document.getElementById('size-toggle-dot').style.transform = active ? 'scale(1.6)' : 'scale(1)';
+            document.getElementById('size-toggle-dot').style.transform = active ? 'scale(1.5)' : 'scale(1)';
         };
 
-        window.handleSelectionAction = (e, action) => {
-            if(e) e.stopPropagation();
+        window.handleSelectionAction = (action) => {
             glassTextarea.focus();
             if (activeImage) {
                 activeImage.style.width = (action === 'big') ? "100%" : "96%";
@@ -462,35 +494,30 @@
                             }
                         }
                     });
-                    sel.removeAllRanges(); sel.addRange(range);
                 }
             }
             triggerSave();
-            sizeMenu.classList.remove('active');
         };
 
         window.closeGlassNote = (e) => {
             if (e) e.stopPropagation();
             sizeMenu.classList.remove('active');
             imageBubble.classList.remove('active');
-            const selImg = glassTextarea.querySelector('.selected-img');
-            if (selImg) selImg.classList.remove('selected-img');
             window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
             glassModal.classList.remove('active');
-            setTimeout(() => { glassModal.style.display = 'none'; }, 500);
+            setTimeout(() => { glassModal.style.display = 'none'; }, 300);
         };
 
+        // --- BULLE BD 100% ---
         let activeImage = null;
         glassTextarea.addEventListener('click', (e) => {
             const prev = glassTextarea.querySelector('.selected-img');
             if (prev) prev.classList.remove('selected-img');
-            
             if (e.target.tagName === 'IMG') {
                 e.stopPropagation();
                 activeImage = e.target;
                 activeImage.classList.add('selected-img');
-                const savedText = activeImage.getAttribute('data-bubble-text') || "";
-                imageBubble.innerText = savedText;
+                imageBubble.innerText = activeImage.getAttribute('data-bubble-text') || "";
                 const imgRect = activeImage.getBoundingClientRect();
                 const containerRect = glassModal.getBoundingClientRect();
                 imageBubble.style.top = (imgRect.top - containerRect.top - 60) + "px";
@@ -544,8 +571,9 @@
         inputNote.addEventListener('input', e => {
             texteCoulissant.textContent = e.target.value || "Book...";
             clearTimeout(window.t2);
-            window.t2 = setTimeout(() => window.saveData({ text: e.target.value }), 600);
+            window.t2 = setTimeout(() => window.saveData({ text: e.target.value }), 500);
         });
+        vitesseRange.addEventListener('change', () => window.saveData({ vitesse: vitesseRange.value }));
 
         let positionX = window.innerWidth;
         function animate() {
