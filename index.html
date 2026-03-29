@@ -17,17 +17,20 @@
             touch-action: manipulation;
         }
 
+        /* Loader invisible par défaut pour Vercel */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
             display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease; pointer-events: none;
+            transition: opacity 0.3s ease; pointer-events: none;
         }
-        #loader-overlay.active { pointer-events: auto; }
 
         #bg-fixed-layer {
             position: fixed; top: 0; left: 0; width: 100vw; height: var(--fixed-vh); z-index: 1;
-            background-color: #000; background-size: contain; background-position: center center;
-            background-repeat: no-repeat; transition: background-image 0.8s ease-in-out;
+            background-color: #001219; 
+            background-size: contain; 
+            background-position: center center;
+            background-repeat: no-repeat; 
+            transition: background-image 0.8s ease-in-out;
             background-image: linear-gradient(180deg, #001219 0%, #002533 100%);
         }
 
@@ -39,7 +42,7 @@
         .scrolling-zone {
             position: absolute; left: 0; width: 100%; height: 60px; display: flex;
             align-items: center; overflow: hidden; z-index: 25; pointer-events: none;
-            top: 45%; /* VOTRE REGLAGE 100% */
+            top: 45%; 
             transition: top 0.3s ease;
         }
 
@@ -49,7 +52,7 @@
             color: #ffffff; will-change: transform;
         }
 
-        /* --- Animations Mana (Fluidité 100%) --- */
+        /* --- Menu Principal & Animations Mana --- */
         #circular-menu-wrapper {
             position: absolute; top: 32%; left: 50%; width: 140px; height: 140px;
             z-index: 100; pointer-events: none; display: flex; align-items: center;
@@ -104,10 +107,10 @@
         }
         #bottom-panel.ui-visible { opacity: 1; transform: translateY(0); }
 
-        /* --- Zone Note & Pétales (Réglages 100%) --- */
+        /* --- Zone Note & Pétales (100%) --- */
         #glass-note-modal {
-            position: absolute; top: 15%; bottom: 35%; left: 50%; 
-            width: 90%; max-width: 56vh; transform: translateX(-50%);
+            position: absolute; top: 15%; bottom: 35%; 
+            left: 50%; width: 90%; max-width: 56vh; transform: translateX(-50%);
             z-index: 3000; display: none; align-items: center; justify-content: center;
             pointer-events: none; border-radius: 32px; overflow: visible;
         }
@@ -138,7 +141,7 @@
             outline: 3px solid rgba(255,255,255,0.9); box-shadow: 0 0 25px rgba(255,255,255,0.6);
         }
 
-        /* Les 5 Pétales */
+        /* Les 5 Pétales Fleur */
         .size-menu-ring {
             position: absolute; top: 30px; left: 30px; width: 0; height: 0;
             display: flex; align-items: center; justify-content: center;
@@ -161,7 +164,9 @@
         .size-menu-ring.active .btn-4 { transform: rotate(216deg) translate(40px) rotate(-216deg); }
         .size-menu-ring.active .btn-5 { transform: rotate(288deg) translate(40px) rotate(-288deg); }
 
-        /* Bulle BD interactrice */
+        .btn-size-action:active { background: white; color: black; transform: scale(0.85) !important; }
+
+        /* Bulle BD */
         #image-bubble {
             position: absolute; min-width: 80px; max-width: 180px; padding: 12px 16px;
             background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
@@ -187,8 +192,7 @@
 </head>
 <body onclick="handleGlobalClick(event)">
 
-    <!-- LOADER AVEC SECURITE IMMEDIATE -->
-    <div id="loader-overlay" class="active">
+    <div id="loader-overlay">
         <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
 
@@ -233,13 +237,13 @@
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 </div>
                 <div class="btn-circular" title="Couleur">
-                    <div id="color-preview" class="w-3 h-3 rounded-full bg-white border border-white"></div>
+                    <div id="color-preview" style="width:12px; height:12px; border-radius:50%; background:white; border:1px solid white;"></div>
                     <input type="color" id="color-picker" value="#ffffff" class="absolute inset-0 opacity-0 cursor-pointer" onclick="event.stopPropagation();" oninput="handleAction(event, 'color_live')" onchange="handleAction(event, 'color_final')">
                 </div>
                 <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
                     <span style="font-size: 10px; font-weight: 900;">Aa</span>
                 </div>
-                <!-- BOUTON GRAVER (SAUVEGARDE DANS LE CLOUD) -->
+                <!-- BOUTON GRAVER (SAUVEGARDE PRODRAFTS STYLE) -->
                 <div class="btn-circular" title="Graver" onclick="handleAction(event, 'save')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                 </div>
@@ -266,7 +270,7 @@
             </div>
         </div>
 
-        <div id="sync-indicator">PRÊT</div>
+        <div id="sync-indicator">ACTIF</div>
 
         <input type="file" id="bg-upload" style="display:none;" accept="image/*" onchange="processFile(event, 'bg')">
         <input type="file" id="music-upload" style="display:none;" accept="audio/*" onchange="processFile(event, 'audio')">
@@ -276,47 +280,42 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // iPad fix
         const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
         window.addEventListener('load', lockLayout);
 
-        // --- GESTION DU RIDEAU (Loader) ---
+        // --- GESTION DU RIDEAU ---
         const loader = document.getElementById('loader-overlay');
-        const hideLoader = () => {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.remove(), 400); // Déblocage physique
-        };
-        
-        // ASTUCE VERCEL : Lever le rideau en 100ms quoi qu'il arrive
-        setTimeout(hideLoader, 100);
+        const hideLoader = () => { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 400); };
+        setTimeout(hideLoader, 150); 
 
         // --- FIREBASE INIT ---
         let db, auth, publicDocRef;
-        let userReady = false;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-book-final-shared';
+        let isConfigured = false;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-pro-drafts';
 
         try {
             const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
             if (config.apiKey) {
                 const app = initializeApp(config);
                 auth = getAuth(app);
-                db = getFirestore(app);
+                db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
                 publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+                isConfigured = true;
                 
                 const initAuth = async () => {
                     await signInAnonymously(auth);
-                    userReady = true;
                     onSnapshot(publicDocRef, snap => {
                         if (snap.exists()) applyData(snap.data());
-                        document.getElementById('sync-indicator').textContent = "GRAVURE ACTIVE";
+                        document.getElementById('sync-indicator').textContent = "GRAVURE SYNCHRONISÉE";
                         document.getElementById('sync-indicator').style.color = "#4ade80";
                     });
                 };
                 initAuth();
             }
-        } catch (e) { console.log("Cloud waiting keys..."); }
+        } catch (e) { console.log("Cloud waiting..."); }
 
         const glassTextarea = document.getElementById('glass-textarea');
         const glassModal = document.getElementById('glass-note-modal');
@@ -350,10 +349,8 @@
         }
 
         window.saveData = async (updates) => {
-            if (!userReady || !auth.currentUser || !publicDocRef) return;
-            try { await setDoc(publicDocRef, updates, { merge: true }); } catch (e) {
-                document.getElementById('sync-indicator').textContent = "ERREUR SAUVEGARDE";
-            }
+            if (!isConfigured || !auth.currentUser) return;
+            try { await setDoc(publicDocRef, updates, { merge: true }); } catch (e) {}
         };
 
         const runManaSequence = (btn, callback) => {
@@ -396,7 +393,6 @@
                 });
             } else if (type === 'save') {
                 runManaSequence(btn, () => {
-                    // GRAVURE DEFINITIVE DANS LE CLOUD
                     const currentBg = bgLayer.style.backgroundImage.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
                     window.saveData({ 
                         pencilNoteRich: glassTextarea.innerHTML, 
@@ -407,8 +403,8 @@
                         bg: currentBg
                     });
                     const ind = document.getElementById('sync-indicator');
-                    ind.textContent = "GRAVÉ DANS LE CLOUD !";
-                    setTimeout(() => ind.textContent = "GRAVURE ACTIVE", 3000);
+                    ind.textContent = "GRAVÉ !";
+                    setTimeout(() => ind.textContent = "GRAVURE SYNCHRONISÉE", 3000);
                 });
             } else if (type === 'gallery') {
                 runManaSequence(btn, () => document.getElementById('bg-upload').click());
