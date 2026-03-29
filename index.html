@@ -20,7 +20,7 @@
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
             display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.8s ease; pointer-events: none;
+            transition: opacity 0.5s ease; pointer-events: none;
         }
         #loader-overlay.active { pointer-events: auto; }
 
@@ -209,6 +209,7 @@
 </head>
 <body onclick="handleGlobalClick(event)">
 
+    <!-- LOADER AVEC SÉCURITÉ VERCEL -->
     <div id="loader-overlay" class="active">
         <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
@@ -261,7 +262,7 @@
                 <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
                     <span style="font-size: 10px; font-weight: 900;">Aa</span>
                 </div>
-                <!-- BOUTON GRAVER (Sauvegarde Manuelle) -->
+                <!-- BOUTON GRAVER (Sauvegarde) -->
                 <div class="btn-circular" title="Graver" onclick="handleAction(event, 'save')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                 </div>
@@ -300,20 +301,44 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // iPad / Vercel fix
         const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
         window.addEventListener('load', lockLayout);
 
-        // --- FIREBASE CONFIG ---
+        // --- FIREBASE CONFIG (Copiez vos clés ici pour GitHub/Vercel) ---
         const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
         const app = initializeApp(config);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-book-final';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-final-sync';
         const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
 
-        let isFirstLoad = true;
         const loaderOverlay = document.getElementById('loader-overlay');
-        const syncIndicator = document.getElementById('sync-indicator');
+        let isFirstLoad = true;
+
+        function hideLoader() {
+            isFirstLoad = false;
+            loaderOverlay.style.opacity = '0';
+            setTimeout(() => { loaderOverlay.classList.remove('active'); loaderOverlay.style.display = 'none'; }, 800);
+        }
+
+        // SÉCURITÉ VISUELLE IMMÉDIATE (Lève le rideau quoi qu'il arrive)
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(hideLoader, 500); 
+        });
+
+        const init = async () => {
+            try {
+                await signInAnonymously(auth);
+                onSnapshot(publicDocRef, snap => {
+                    if (snap.exists()) applyData(snap.data());
+                    hideLoader();
+                    document.getElementById('sync-indicator').textContent = "GRAVURE ACTIVE";
+                }, err => { hideLoader(); });
+            } catch(e) { hideLoader(); }
+        };
+        init();
+
         const glassTextarea = document.getElementById('glass-textarea');
         const glassModal = document.getElementById('glass-note-modal');
         const circWrapper = document.getElementById('circular-menu-wrapper');
@@ -325,31 +350,6 @@
         const texteCoulissant = document.getElementById('texte-coulissant');
         const inputNote = document.getElementById('input-note');
         const vitesseRange = document.getElementById('vitesse-range');
-
-        function hideLoader() {
-            isFirstLoad = false;
-            loaderOverlay.style.opacity = '0';
-            setTimeout(() => {
-                loaderOverlay.classList.remove('active');
-                loaderOverlay.style.display = 'none';
-            }, 800);
-        }
-
-        // SÉCURITÉ VERCEL : Si pas de clé, on débloque le visuel après 1 seconde
-        setTimeout(() => { if(isFirstLoad) hideLoader(); }, 1000);
-
-        const init = async () => {
-            try {
-                await signInAnonymously(auth);
-                onSnapshot(publicDocRef, snap => {
-                    if (snap.exists()) applyData(snap.data());
-                    hideLoader();
-                    syncIndicator.textContent = "GRAVURE ACTIVE";
-                    syncIndicator.style.color = "#4ade80";
-                }, err => { hideLoader(); });
-            } catch(e) { hideLoader(); }
-        };
-        init();
 
         function applyData(data) {
             if (document.activeElement !== glassTextarea && data.pencilNoteRich !== undefined) glassTextarea.innerHTML = data.pencilNoteRich;
@@ -415,13 +415,12 @@
                         color: texteCoulissant.style.color,
                         fontIdx: currentFontIdx
                     });
-                    syncIndicator.textContent = "GRAVÉ !";
-                    setTimeout(() => syncIndicator.textContent = "GRAVURE ACTIVE", 2000);
+                    const ind = document.getElementById('sync-indicator');
+                    ind.textContent = "GRAVÉ !"; ind.style.color = "#4ade80";
+                    setTimeout(() => ind.textContent = "GRAVURE ACTIVE", 2000);
                 });
             } else if (type === 'gallery') {
                 runManaSequence(btn, () => document.getElementById('bg-upload').click());
-            } else if (type === 'files') {
-                runManaSequence(btn, () => document.getElementById('music-upload').click());
             } else if (type === 'font') {
                 runManaSequence(btn, () => {
                     currentFontIdx = (currentFontIdx + 1) % fontsRaw.length;
