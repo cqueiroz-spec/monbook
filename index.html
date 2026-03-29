@@ -17,13 +17,11 @@
             touch-action: manipulation;
         }
 
-        /* Rideau de chargement : Masqué par défaut pour éviter l'écran noir sur Vercel */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
-            display: none; align-items: center; justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             transition: opacity 0.5s ease; pointer-events: none;
         }
-        #loader-overlay.active { display: flex; opacity: 1; }
 
         #bg-fixed-layer {
             position: fixed; top: 0; left: 0; width: 100vw; height: var(--fixed-vh); z-index: 1;
@@ -40,8 +38,7 @@
         .scrolling-zone {
             position: absolute; left: 0; width: 100%; height: 60px; display: flex;
             align-items: center; overflow: hidden; z-index: 25; pointer-events: none;
-            top: 45%; /* POSITION 100% RESPECTEE */
-            transition: top 0.3s ease;
+            top: 45%; transition: top 0.3s ease;
         }
 
         #texte-coulissant {
@@ -85,7 +82,7 @@
             align-items: center; justify-content: center; color: white;
             pointer-events: auto; transform: translate(-50%, -50%) rotateX(-45deg);
             box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-            transition: top 0.4s ease, left 0.4s ease, transform 0.4s ease, background 0.2s;
+            transition: top 0.4s ease, left 0.4s ease, transform 0.4s ease;
             z-index: 5; cursor: pointer;
         }
         .btn-circular:nth-child(1) { top: 0%; left: 50%; }
@@ -157,7 +154,7 @@
             border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 12px solid #fff;
         }
 
-        /* --- Pétales Fleur 100% --- */
+        /* --- Système Fleur (Pétales 100%) --- */
         .glass-note-size-toggle {
             position: absolute; top: 30px; left: 30px; width: 44px; height: 44px;
             display: flex; align-items: center; justify-content: center;
@@ -179,7 +176,6 @@
             color: white; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             font-size: 14px; top: 50%; left: 50%; margin-top: -17px; margin-left: -17px;
-            user-select: none;
         }
         .size-menu-ring.active .btn-size-action { opacity: 1; pointer-events: auto; }
         .size-menu-ring.active .btn-1 { transform: rotate(0deg) translate(40px) rotate(0deg); }
@@ -210,8 +206,7 @@
 </head>
 <body onclick="handleGlobalClick(event)">
 
-    <!-- LOADER DESACTIVE PAR DEFAUT POUR VERCEL -->
-    <div id="loader-overlay">
+    <div id="loader-overlay" class="active">
         <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
 
@@ -256,9 +251,9 @@
                 <div class="btn-circular" title="Livre" onclick="handleAction(event, 'book')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 </div>
-                <div class="btn-circular" title="Couleur" onclick="event.stopPropagation()">
-                    <div id="color-preview" class="w-3 h-3 rounded-full bg-white border border-white"></div>
-                    <input type="color" id="color-picker" value="#ffffff" class="absolute inset-0 opacity-0 cursor-pointer" oninput="handleAction(event, 'color_live')" onchange="handleAction(event, 'color_final')">
+                <div class="btn-circular" title="Couleur">
+                    <div id="color-preview" style="width:12px; height:12px; border-radius:50%; background:white; border:1px solid white;"></div>
+                    <input type="color" id="color-picker" value="#ffffff" class="absolute inset-0 opacity-0 cursor-pointer" onclick="event.stopPropagation();" oninput="handleAction(event, 'color_live')" onchange="handleAction(event, 'color_final')">
                 </div>
                 <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
                     <span style="font-size: 10px; font-weight: 900;">Aa</span>
@@ -302,11 +297,12 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // iPad Height Fix
+        // Fix iPad Height
         const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
         window.addEventListener('load', lockLayout);
 
-        // --- CONFIG FIREBASE (GitHub/Vercel) ---
+        // --- CONFIG FIREBASE ---
+        // ASTUCE VERCEL : Si pas de clé, on ne bloque pas l'écran !
         const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
         const app = initializeApp(config);
         const auth = getAuth(app);
@@ -315,9 +311,15 @@
         const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
 
         const loader = document.getElementById('loader-overlay');
-        const hideLoader = () => { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 400); };
-        
-        // ASTUCE VERCEL : Débloque le visuel en 100ms quoi qu'il arrive
+        function hideLoader() {
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.classList.remove('active');
+                loader.style.display = 'none';
+            }, 500);
+        }
+
+        // DEBLOCAGE VISUEL IMMEDIAT (Fini l'écran noir)
         setTimeout(hideLoader, 100);
 
         const init = async () => {
@@ -326,7 +328,6 @@
                 onSnapshot(publicDocRef, snap => {
                     if (snap.exists()) applyData(snap.data());
                     document.getElementById('sync-indicator').textContent = "GRAVURE ACTIVE";
-                    document.getElementById('sync-indicator').style.color = "#4ade80";
                 }, err => { console.log("Cloud waiting keys..."); });
             } catch(e) {}
         };
@@ -401,7 +402,7 @@
                 });
             } else if (type === 'save') {
                 runManaSequence(btn, () => {
-                    // FORCE LA GRAVURE
+                    // FORCE LA GRAVURE DEFINITIVE
                     window.saveData({ 
                         pencilNoteRich: glassTextarea.innerHTML, 
                         text: inputNote.value,
@@ -439,8 +440,7 @@
         window.handleSelectionAction = (action) => {
             glassTextarea.focus();
             if (activeImage) {
-                if (action === 'big') activeImage.style.width = "100%";
-                else if (action === 'normal') activeImage.style.width = "96%";
+                activeImage.style.width = (action === 'big') ? "100%" : "96%";
             } else {
                 const sel = window.getSelection();
                 if (sel.rangeCount > 0 && !sel.isCollapsed) {
@@ -473,6 +473,8 @@
 
         let activeImage = null;
         glassTextarea.addEventListener('click', (e) => {
+            const prev = glassTextarea.querySelector('.selected-img');
+            if (prev) prev.classList.remove('selected-img');
             if (e.target.tagName === 'IMG') {
                 e.stopPropagation();
                 activeImage = e.target;
@@ -510,10 +512,9 @@
                         const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
                         if (mode === 'bg') {
                             bgLayer.style.backgroundImage = `url('${dataUrl}')`;
-                            window.saveData({ bg: dataUrl });
                         } else {
                             const newImg = document.createElement('img'); newImg.src = dataUrl;
-                            glassTextarea.appendChild(newImg); window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
+                            glassTextarea.appendChild(newImg); 
                         }
                     };
                     img.src = e.target.result;
