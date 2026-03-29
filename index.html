@@ -209,7 +209,6 @@
 </head>
 <body onclick="handleGlobalClick(event)">
 
-    <!-- LOADER AVEC SÉCURITÉ VERCEL -->
     <div id="loader-overlay" class="active">
         <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
@@ -219,7 +218,6 @@
     <div id="portrait-container">
         <audio id="audio-player" loop></audio>
 
-        <!-- Modal Note -->
         <div id="glass-note-modal">
             <div class="glass-note-content" onclick="event.stopPropagation()">
                 <div id="image-bubble" contenteditable="true" onclick="event.stopPropagation()"></div>
@@ -262,7 +260,7 @@
                 <div class="btn-circular" title="Police" onclick="handleAction(event, 'font')">
                     <span style="font-size: 10px; font-weight: 900;">Aa</span>
                 </div>
-                <!-- BOUTON GRAVER (Sauvegarde) -->
+                <!-- BOUTON GRAVER (FORCE SAVE) -->
                 <div class="btn-circular" title="Graver" onclick="handleAction(event, 'save')">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                 </div>
@@ -301,16 +299,16 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // iPad / Vercel fix
+        // Fix layout iPad immédiatement
         const lockLayout = () => { document.documentElement.style.setProperty('--fixed-vh', `${window.innerHeight}px`); };
-        window.addEventListener('load', lockLayout);
+        lockLayout(); window.addEventListener('load', lockLayout);
 
-        // --- FIREBASE CONFIG (Copiez vos clés ici pour GitHub/Vercel) ---
+        // CONFIGURATION FIREBASE (GitHub/Vercel)
         const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
         const app = initializeApp(config);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-final-sync';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mana-final-persist';
         const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
 
         const loaderOverlay = document.getElementById('loader-overlay');
@@ -322,10 +320,8 @@
             setTimeout(() => { loaderOverlay.classList.remove('active'); loaderOverlay.style.display = 'none'; }, 800);
         }
 
-        // SÉCURITÉ VISUELLE IMMÉDIATE (Lève le rideau quoi qu'il arrive)
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(hideLoader, 500); 
-        });
+        // FORCE LA VUE IMMÉDIATE (Plus d'écran noir)
+        window.addEventListener('DOMContentLoaded', () => { setTimeout(hideLoader, 500); });
 
         const init = async () => {
             try {
@@ -408,12 +404,14 @@
                 });
             } else if (type === 'save') {
                 runManaSequence(btn, () => {
+                    // FORCE LA GRAVURE DÉFINITIVE
                     window.saveData({ 
                         pencilNoteRich: glassTextarea.innerHTML, 
                         text: inputNote.value,
                         vitesse: vitesseRange.value,
                         color: texteCoulissant.style.color,
-                        fontIdx: currentFontIdx
+                        fontIdx: currentFontIdx,
+                        bg: bgLayer.style.backgroundImage.replace('url("', '').replace('")', '')
                     });
                     const ind = document.getElementById('sync-indicator');
                     ind.textContent = "GRAVÉ !"; ind.style.color = "#4ade80";
@@ -425,7 +423,6 @@
                 runManaSequence(btn, () => {
                     currentFontIdx = (currentFontIdx + 1) % fontsRaw.length;
                     texteCoulissant.style.fontFamily = fontsRaw[currentFontIdx];
-                    window.saveData({ fontIdx: currentFontIdx });
                 });
             } else if (type === 'music_toggle') {
                 runManaSequence(btn, () => { if (audioPlayer.src) audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause(); });
@@ -471,7 +468,6 @@
             if (e) e.stopPropagation();
             sizeMenu.classList.remove('active');
             imageBubble.classList.remove('active');
-            window.saveData({ pencilNoteRich: glassTextarea.innerHTML });
             glassModal.classList.remove('active');
             setTimeout(() => { glassModal.style.display = 'none'; }, 300);
         };
@@ -514,7 +510,6 @@
                         const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
                         if (mode === 'bg') {
                             bgLayer.style.backgroundImage = `url('${dataUrl}')`;
-                            window.saveData({ bg: dataUrl });
                         } else {
                             const newImg = document.createElement('img'); newImg.src = dataUrl;
                             glassTextarea.appendChild(newImg); 
